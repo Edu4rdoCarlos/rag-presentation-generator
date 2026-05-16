@@ -1,0 +1,71 @@
+# =============================================================================
+# docker-compose.yml — Ambiente de DESENVOLVIMENTO
+#
+# Todos os caminhos relativos são resolvidos a partir deste arquivo,
+# portanto "../" aponta para a raiz do projeto.
+#
+# Uso (a partir da raiz do projeto):
+#   docker compose -f deploy/docker-compose.yml up --build   # primeiro start
+#   docker compose -f deploy/docker-compose.yml up           # starts subsequentes
+#   docker compose -f deploy/docker-compose.yml down         # encerra containers
+#
+# Uso (a partir desta pasta):
+#   docker compose up --build
+#
+# O Uvicorn inicia com --reload: qualquer alteração em ../app é refletida
+# instantaneamente no container sem rebuild da imagem.
+# =============================================================================
+
+services:
+
+  # ── Aplicação FastAPI ─────────────────────────────────────────────────────
+  api:
+    build:
+      # Contexto de build = raiz do projeto.
+      # O Dockerfile enxerga requirements.txt e app/ a partir daqui.
+      context: ..
+      # Caminho do Dockerfile relativo ao contexto (raiz do projeto).
+      dockerfile: deploy/Dockerfile
+      # Usa o stage final "runtime"; o builder é descartado após o build.
+      target: runtime
+
+    container_name: testdoc_api
+
+    # Reinicia automaticamente exceto quando parado manualmente
+    restart: unless-stopped
+
+    # Injeta as variáveis do .env na raiz do projeto.
+    # NUNCA comite o .env real; use .env.example como referência.
+    env_file:
+      - ../.env
+
+    # Variáveis de ambiente específicas para desenvolvimento
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "true"
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      # Hot reload: mapeia apenas o diretório de código-fonte da raiz.
+      # O restante da imagem (dependências em /usr/local) permanece intacto,
+      # evitando conflito entre pacotes do host e do container.
+      - ../app:/app/app
+
+    # Sobrescreve o CMD de produção do Dockerfile para habilitar --reload.
+    # --reload-dir aponta para o volume montado, watchfiles monitora só ele.
+    command: >
+      uvicorn app.main:app
+        --host 0.0.0.0
+        --port 8000
+        --reload
+        --reload-dir /app/app
+
+    # Verifica se a aplicação subiu corretamente antes de marcar como healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

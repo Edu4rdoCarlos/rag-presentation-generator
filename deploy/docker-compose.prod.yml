@@ -1,0 +1,41 @@
+# =============================================================================
+# docker-compose.prod.yml — Overrides de PRODUÇÃO
+#
+# Aplica sobre o docker-compose.yml base usando merge de arquivos.
+#
+# Uso (a partir da raiz do projeto):
+#   docker compose \
+#     -f deploy/docker-compose.yml \
+#     -f deploy/docker-compose.prod.yml \
+#     up -d --build
+#
+# Diferenças em relação ao ambiente de desenvolvimento:
+#   - Sem volume de hot reload (código vem da imagem buildada)
+#   - Sem --reload no Uvicorn
+#   - Variáveis de ambiente ajustadas para produção
+#   - Workers aumentados
+# =============================================================================
+
+services:
+
+  api:
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+
+    # Remove o volume de hot reload definido no compose base.
+    # Em produção o código está embutido na imagem (COPY no Dockerfile).
+    volumes: []
+
+    # Restaura o CMD de produção do Dockerfile (multi-worker, sem --reload).
+    # Ajuste --workers conforme os vCPUs disponíveis no host: (2 × vCPUs) + 1.
+    command: >
+      uvicorn app.main:app
+        --host 0.0.0.0
+        --port 8000
+        --workers 4
+
+    # Em produção exponha apenas na interface interna se houver um proxy reverso
+    # (nginx, Traefik, etc.) na frente. Descomente e ajuste conforme necessário:
+    # ports:
+    #   - "127.0.0.1:8000:8000"

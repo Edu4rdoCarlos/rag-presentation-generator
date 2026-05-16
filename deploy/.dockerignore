@@ -1,0 +1,66 @@
+# =============================================================================
+# .dockerignore — TestDoc Agent
+# Caminhos relativos à raiz do projeto (build context = "..").
+# Docker procura este arquivo tanto na raiz do contexto quanto ao lado
+# do Dockerfile, portanto posicioná-lo em deploy/ é suficiente.
+#
+# Regra de ouro: quanto menor o contexto, mais rápido o build e o push.
+# =============================================================================
+
+# ── Infraestrutura Docker (esta pasta não precisa entrar na imagem) ────────
+deploy/
+
+# ── Controle de versão ────────────────────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+
+# ── Artefatos Python ──────────────────────────────────────────────────────
+__pycache__
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Ambientes virtuais locais ─────────────────────────────────────────────
+.venv
+venv/
+env/
+ENV/
+.python-version
+
+# ── Segredos e configurações locais ──────────────────────────────────────
+# O .env NUNCA deve entrar na imagem. As variáveis chegam via env_file
+# no docker-compose ou como secrets no orquestrador de produção.
+.env
+.env.*
+!.env.example
+
+# ── Ferramentas de desenvolvimento e testes ───────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# ── IDEs e editores ───────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Documentação e assets não-essenciais ─────────────────────────────────
+*.md
+docs/
+*.pdf
+notebooks/
