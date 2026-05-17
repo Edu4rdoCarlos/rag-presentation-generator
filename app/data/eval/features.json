@@ -1,0 +1,99 @@
+[
+  {
+    "id": "eval_001",
+    "feature_name": "Cadastro de usuário",
+    "description": "Permite que novos usuários criem uma conta na plataforma informando nome, e-mail e senha.",
+    "business_rules": [
+      "E-mail deve ser único no sistema.",
+      "Senha deve ter no mínimo 8 caracteres.",
+      "E-mail deve ser confirmado antes do primeiro acesso.",
+      "Campos obrigatórios não podem ser enviados em branco."
+    ],
+    "dependencies": ["UserService", "EmailService", "ValidationService"]
+  },
+  {
+    "id": "eval_002",
+    "feature_name": "Exclusão de conta",
+    "description": "Permite que o usuário encerre permanentemente sua conta na plataforma.",
+    "business_rules": [
+      "Usuário deve confirmar a exclusão com a senha atual.",
+      "Dados pessoais devem ser anonimizados, não deletados.",
+      "Usuário com pedidos pendentes não pode excluir a conta.",
+      "Sessões ativas devem ser encerradas imediatamente."
+    ],
+    "dependencies": ["UserService", "OrderService", "SessionService", "AnonymizationService"]
+  },
+  {
+    "id": "eval_003",
+    "feature_name": "Integração com API externa de pagamento",
+    "description": "Processa pagamentos via gateway externo (ex: Stripe), com suporte a cartão de crédito e Pix.",
+    "business_rules": [
+      "Tentativas de pagamento com falha devem ser registradas.",
+      "Dados de cartão não devem ser armazenados localmente.",
+      "Pagamento confirmado deve atualizar o status do pedido.",
+      "Timeout na API externa deve gerar estado de pagamento pendente."
+    ],
+    "dependencies": ["PaymentGateway", "OrderService", "WebhookService"]
+  },
+  {
+    "id": "eval_004",
+    "feature_name": "Emissão de certificado digital",
+    "description": "Gera e disponibiliza certificado de conclusão para usuários que completaram um curso.",
+    "business_rules": [
+      "Certificado só pode ser emitido para quem concluiu 100% do curso.",
+      "Certificado deve conter nome, data e código único de validação.",
+      "Código de validação deve ser verificável publicamente.",
+      "Emissão deve ser registrada para evitar duplicatas."
+    ],
+    "dependencies": ["CourseService", "CertificateService", "StorageService"]
+  },
+  {
+    "id": "eval_005",
+    "feature_name": "Agendamento de consulta",
+    "description": "Permite que pacientes agendem consultas médicas escolhendo médico, data e horário disponíveis.",
+    "business_rules": [
+      "Horário só pode ser agendado se estiver disponível.",
+      "Paciente não pode ter dois agendamentos no mesmo horário.",
+      "Cancelamento deve ser feito com pelo menos 24 horas de antecedência.",
+      "Confirmação deve ser enviada por e-mail após o agendamento."
+    ],
+    "dependencies": ["ScheduleService", "DoctorService", "EmailService", "PatientService"]
+  },
+  {
+    "id": "eval_006",
+    "feature_name": "Transferência bancária entre contas",
+    "description": "Permite que usuários realizem transferências de saldo entre contas dentro da plataforma.",
+    "business_rules": [
+      "Saldo da conta origem deve ser suficiente.",
+      "Conta destino deve existir e estar ativa.",
+      "Transferência deve ser atômica: débito e crédito ocorrem juntos.",
+      "Limite diário de transferência não pode ser excedido.",
+      "Operação deve ser registrada para auditoria."
+    ],
+    "dependencies": ["AccountService", "TransactionService", "AuditService", "LimitService"]
+  },
+  {
+    "id": "eval_007",
+    "feature_name": "Notificação push para usuários",
+    "description": "Envia notificações push para usuários com base em eventos do sistema, como promoções e atualizações de pedido.",
+    "business_rules": [
+      "Usuário pode desativar notificações nas configurações.",
+      "Notificação não deve ser enviada entre 22h e 8h.",
+      "Falha no envio não deve impactar o fluxo principal.",
+      "Histórico de notificações deve ser mantido por 30 dias."
+    ],
+    "dependencies": ["NotificationService", "UserPreferenceService", "PushGateway"]
+  },
+  {
+    "id": "eval_008",
+    "feature_name": "Aprovação de pedido por supervisor",
+    "description": "Pedidos acima de um valor limite precisam de aprovação de um supervisor antes de serem processados.",
+    "business_rules": [
+      "Pedidos acima de R$ 10.000 exigem aprovação.",
+      "Supervisor deve receber notificação imediata.",
+      "Pedido não aprovado em 48h é cancelado automaticamente.",
+      "Solicitante deve ser notificado sobre aprovação ou rejeição."
+    ],
+    "dependencies": ["OrderService", "ApprovalService", "NotificationService", "UserService"]
+  }
+]

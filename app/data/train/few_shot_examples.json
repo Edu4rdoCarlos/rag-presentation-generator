@@ -1,0 +1,235 @@
+[
+  {
+    "feature_name": "Login com 2FA",
+    "description": "Usuário realiza login e confirma acesso com código temporário enviado por e-mail ou SMS.",
+    "business_rules": [
+      "Código deve expirar em 5 minutos.",
+      "Código não pode ser reutilizado.",
+      "Usuário bloqueado não pode autenticar."
+    ],
+    "dependencies": ["UserService", "AuthService", "EmailService"],
+    "identified_risks": [
+      "Código expirado ser aceito.",
+      "Código reutilizado ser aceito.",
+      "Ataques de brute force no código.",
+      "Login de usuário bloqueado.",
+      "Falha no envio do código por e-mail ou SMS."
+    ],
+    "criticality": "Alta",
+    "recommended_test_types": ["unitário", "integração", "E2E", "segurança"],
+    "priority": {
+      "Alta": [
+        "Código expirado ser aceito.",
+        "Código reutilizado ser aceito.",
+        "Ataques de brute force no código.",
+        "Login de usuário bloqueado."
+      ],
+      "Média": [
+        "Falha no envio do código por e-mail ou SMS."
+      ]
+    },
+    "test_scenarios": [
+      "Validar que código expirado não permite autenticação.",
+      "Validar que código já utilizado não pode ser reutilizado.",
+      "Validar bloqueio após múltiplas tentativas inválidas.",
+      "Validar que usuário bloqueado não consegue autenticar.",
+      "Validar comportamento quando o envio do código falha."
+    ],
+    "justification": "A funcionalidade envolve autenticação e controle de acesso, portanto exige testes de segurança, integração com serviços de autenticação e e-mail/SMS, além de E2E para validar o fluxo completo do usuário."
+  },
+  {
+    "feature_name": "Checkout com cupom",
+    "description": "Aplica cupons de desconto durante o processo de checkout.",
+    "business_rules": [
+      "Cupom pode estar ativo, expirado ou esgotado.",
+      "Cupom não pode ser usado duas vezes pelo mesmo usuário.",
+      "Valor final não pode ficar negativo.",
+      "Pagamento só deve ser criado se o pedido for válido."
+    ],
+    "dependencies": ["PaymentService", "CouponService", "OrderService"],
+    "identified_risks": [
+      "Aceitar cupom expirado.",
+      "Aceitar cupom esgotado.",
+      "Permitir reuso de cupom pelo mesmo usuário.",
+      "Gerar valor final negativo.",
+      "Criar pagamento para pedido inválido."
+    ],
+    "criticality": "Crítica",
+    "recommended_test_types": ["unitário", "integração", "E2E", "segurança"],
+    "priority": {
+      "Alta": [
+        "Aceitar cupom expirado.",
+        "Aceitar cupom esgotado.",
+        "Permitir reuso de cupom pelo mesmo usuário.",
+        "Gerar valor final negativo.",
+        "Criar pagamento para pedido inválido."
+      ],
+      "Média": []
+    },
+    "test_scenarios": [
+      "Validar cálculo de desconto para cupom ativo.",
+      "Rejeitar cupom expirado.",
+      "Rejeitar cupom esgotado.",
+      "Impedir reutilização do cupom pelo mesmo usuário.",
+      "Impedir valor final negativo.",
+      "Criar pagamento apenas para pedido válido."
+    ],
+    "justification": "A funcionalidade envolve regra de negócio financeira, validação de estado do cupom, criação de pedido e integração com pagamento, portanto exige testes unitários, de integração e de fluxo completo."
+  },
+  {
+    "feature_name": "Upload de documento",
+    "description": "Permite que o usuário envie arquivos para o sistema com validação de tipo e tamanho.",
+    "business_rules": [
+      "Apenas PDF e DOCX são aceitos.",
+      "Tamanho máximo de 10 MB.",
+      "Arquivo deve ser salvo com nome único.",
+      "Usuário não autenticado não pode fazer upload."
+    ],
+    "dependencies": ["StorageService", "AuthService", "FileValidator"],
+    "identified_risks": [
+      "Aceitar tipos de arquivo não permitidos.",
+      "Aceitar arquivos acima do tamanho máximo.",
+      "Sobrescrever arquivo existente com mesmo nome.",
+      "Upload por usuário não autenticado.",
+      "Falha silenciosa no armazenamento do arquivo."
+    ],
+    "criticality": "Alta",
+    "recommended_test_types": ["unitário", "integração", "segurança"],
+    "priority": {
+      "Alta": [
+        "Aceitar tipos de arquivo não permitidos.",
+        "Upload por usuário não autenticado.",
+        "Aceitar arquivos acima do tamanho máximo."
+      ],
+      "Média": [
+        "Sobrescrever arquivo existente com mesmo nome.",
+        "Falha silenciosa no armazenamento do arquivo."
+      ]
+    },
+    "test_scenarios": [
+      "Rejeitar upload de arquivo com extensão não permitida.",
+      "Rejeitar arquivo acima de 10 MB.",
+      "Validar que arquivo é salvo com nome único.",
+      "Bloquear upload de usuário não autenticado.",
+      "Validar que falha no storage retorna erro adequado ao usuário."
+    ],
+    "justification": "A funcionalidade envolve validação de entrada, controle de acesso e persistência de arquivo, exigindo testes unitários para validações, de integração com o storage e de segurança para acesso não autenticado."
+  },
+  {
+    "feature_name": "Recuperação de senha",
+    "description": "Permite que o usuário redefina sua senha por meio de um link enviado ao e-mail cadastrado.",
+    "business_rules": [
+      "Link de recuperação expira em 15 minutos.",
+      "Link só pode ser usado uma vez.",
+      "Nova senha não pode ser igual à anterior.",
+      "E-mail não cadastrado não deve revelar se existe ou não."
+    ],
+    "dependencies": ["UserService", "EmailService", "TokenService"],
+    "identified_risks": [
+      "Link expirado ser aceito.",
+      "Link reutilizado ser aceito.",
+      "Aceitar nova senha igual à anterior.",
+      "Revelar se e-mail existe ou não no sistema.",
+      "Ataques de enumeração de usuários."
+    ],
+    "criticality": "Alta",
+    "recommended_test_types": ["unitário", "integração", "segurança"],
+    "priority": {
+      "Alta": [
+        "Link expirado ser aceito.",
+        "Link reutilizado ser aceito.",
+        "Revelar se e-mail existe ou não no sistema.",
+        "Ataques de enumeração de usuários."
+      ],
+      "Média": [
+        "Aceitar nova senha igual à anterior."
+      ]
+    },
+    "test_scenarios": [
+      "Validar que link expirado não permite redefinição.",
+      "Validar que link já utilizado não pode ser reutilizado.",
+      "Rejeitar nova senha igual à senha anterior.",
+      "Validar que resposta para e-mail inexistente não revela dados.",
+      "Validar integração com serviço de envio de e-mail."
+    ],
+    "justification": "A funcionalidade envolve controle de acesso, expiração de tokens e segurança contra enumeração de usuários, exigindo testes unitários para as regras de negócio, integração com o serviço de e-mail e testes de segurança."
+  },
+  {
+    "feature_name": "Alteração de permissões",
+    "description": "Permite que administradores alterem o nível de acesso de outros usuários no sistema.",
+    "business_rules": [
+      "Apenas administradores podem alterar permissões.",
+      "Não é possível rebaixar o próprio usuário.",
+      "Alterações devem ser registradas em log de auditoria.",
+      "Permissões inválidas não podem ser atribuídas."
+    ],
+    "dependencies": ["UserService", "AuthService", "AuditService"],
+    "identified_risks": [
+      "Usuário não administrador conseguir alterar permissões.",
+      "Administrador rebaixar a própria conta.",
+      "Atribuir permissão inexistente ou inválida.",
+      "Alteração não registrada no log de auditoria.",
+      "Escalada de privilégios por manipulação de requisição."
+    ],
+    "criticality": "Crítica",
+    "recommended_test_types": ["unitário", "integração", "segurança"],
+    "priority": {
+      "Alta": [
+        "Usuário não administrador conseguir alterar permissões.",
+        "Escalada de privilégios por manipulação de requisição.",
+        "Administrador rebaixar a própria conta."
+      ],
+      "Média": [
+        "Atribuir permissão inexistente ou inválida.",
+        "Alteração não registrada no log de auditoria."
+      ]
+    },
+    "test_scenarios": [
+      "Bloquear alteração de permissão por usuário não administrador.",
+      "Impedir que administrador rebaixe a própria conta.",
+      "Rejeitar atribuição de permissão inválida.",
+      "Validar que toda alteração é registrada no log de auditoria.",
+      "Testar tentativa de escalada de privilégio via manipulação de payload."
+    ],
+    "justification": "A funcionalidade envolve controle de acesso crítico e auditoria, exigindo testes de segurança para validar autorização, testes unitários para regras de negócio e integração com o serviço de auditoria."
+  },
+  {
+    "feature_name": "Geração de relatório financeiro",
+    "description": "Gera relatório consolidado de transações financeiras por período selecionado pelo usuário.",
+    "business_rules": [
+      "Período máximo de consulta é de 12 meses.",
+      "Apenas usuários com perfil financeiro podem acessar.",
+      "Relatório deve refletir dados até o momento da geração.",
+      "Relatório com mais de 10.000 registros deve ser gerado de forma assíncrona."
+    ],
+    "dependencies": ["TransactionService", "AuthService", "ReportService"],
+    "identified_risks": [
+      "Usuário sem perfil financeiro acessar o relatório.",
+      "Consultar período superior ao limite de 12 meses.",
+      "Relatório grande travar a aplicação por processamento síncrono.",
+      "Dados inconsistentes por race condition na geração.",
+      "Timeout em consultas com alto volume de registros."
+    ],
+    "criticality": "Alta",
+    "recommended_test_types": ["unitário", "integração", "segurança", "performance"],
+    "priority": {
+      "Alta": [
+        "Usuário sem perfil financeiro acessar o relatório.",
+        "Relatório grande travar a aplicação por processamento síncrono.",
+        "Timeout em consultas com alto volume de registros."
+      ],
+      "Média": [
+        "Consultar período superior ao limite de 12 meses.",
+        "Dados inconsistentes por race condition na geração."
+      ]
+    },
+    "test_scenarios": [
+      "Bloquear acesso ao relatório para usuário sem perfil financeiro.",
+      "Rejeitar consulta com período superior a 12 meses.",
+      "Validar que relatório com mais de 10.000 registros é gerado de forma assíncrona.",
+      "Testar timeout em consulta com alto volume de dados.",
+      "Validar consistência dos dados no relatório gerado."
+    ],
+    "justification": "A funcionalidade envolve acesso a dados financeiros sensíveis e alto volume de dados, exigindo testes de segurança para controle de acesso, performance para cenários de carga e integração com os serviços de transação e relatório."
+  }
+]
