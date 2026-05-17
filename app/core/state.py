@@ -8,11 +8,14 @@ class TestDocState(BaseModel):
     Each agent receives the full state and returns a partial update dict.
     """
 
-    # ── Input payload (populated at graph entry) ─────────────────────────────
-    feature_name: str
-    description: str
-    business_rules: List[str]
-    dependencies: List[str]
+    # ── Raw text input (populated when user sends plain text instead of JSON) ──
+    raw_description: Optional[str] = None
+
+    # ── Input payload (populated at graph entry or by parser agent) ───────────
+    feature_name: str = ""
+    description: str = ""
+    business_rules: List[str] = Field(default_factory=list)
+    dependencies: List[str] = Field(default_factory=list)
 
     # ── Agent 1 outputs: Risk Analyst (Planner + RAG) ─────────────────────────
     retrieved_examples: Optional[List[str]] = Field(default_factory=list)
