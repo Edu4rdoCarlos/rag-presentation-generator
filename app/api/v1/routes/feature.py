@@ -22,6 +22,13 @@ class FeatureAnalyzeRequest(BaseModel):
     )
 
 
+class FeatureAnalyzeTextRequest(BaseModel):
+    raw_text: str = Field(
+        ...,
+        examples=["Fiz uma tela de cadastro onde o usuário informa nome, e-mail e senha. O e-mail precisa ser único e a senha ter 8 caracteres no mínimo."],
+    )
+
+
 class FeatureAnalyzeResponse(BaseModel):
     feature_name: str
     criticality: str | None
@@ -53,6 +60,40 @@ async def analyze_feature(payload: FeatureAnalyzeRequest) -> FeatureAnalyzeRespo
         business_rules=payload.business_rules,
         dependencies=payload.dependencies,
     )
+
+    try:
+        final_state: TestDocState = await testdoc_graph.ainvoke(initial_state)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Graph execution failed: {exc}",
+        ) from exc
+
+    return FeatureAnalyzeResponse(
+        feature_name=final_state.feature_name,
+        criticality=final_state.criticality,
+        identified_risks=final_state.identified_risks or [],
+        recommended_test_types=final_state.recommended_test_types or [],
+        prioritized_scenarios=final_state.prioritized_scenarios or [],
+        justification=final_state.justification,
+        final_documentation=final_state.final_documentation,
+        reflection_logs=final_state.reflection_logs or [],
+        reflection_iteration=final_state.reflection_iteration,
+    )
+
+
+@router.post(
+    "/analyze/text",
+    response_model=FeatureAnalyzeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Analyze a feature from plain text and generate test documentation",
+)
+async def analyze_feature_text(payload: FeatureAnalyzeTextRequest) -> FeatureAnalyzeResponse:
+    """
+    Receives a plain-text description of a feature, parses it into structured
+    fields via Agent 0, then runs the full 3-agent pipeline.
+    """
+    initial_state = TestDocState(raw_description=payload.raw_text)
 
     try:
         final_state: TestDocState = await testdoc_graph.ainvoke(initial_state)

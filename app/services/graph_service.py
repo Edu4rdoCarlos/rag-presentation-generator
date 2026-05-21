@@ -11,6 +11,7 @@ Graph topology:
 from langgraph.graph import END, StateGraph
 
 from app.agents.documenter_critic import agent_3_documenter_reflection_node
+from app.agents.feature_parser import agent_0_feature_parser_node
 from app.agents.risk_analyst import agent_1_risk_analyst_node
 from app.agents.test_strategist import agent_2_test_strategist_node
 from app.core.config import settings
@@ -18,6 +19,7 @@ from app.core.state import TestDocState
 
 # ── Node names (string constants avoid typos across the codebase) ─────────
 
+NODE_FEATURE_PARSER = "parser_feature"
 NODE_RISK_ANALYST = "analista_riscos"
 NODE_TEST_STRATEGIST = "estrategista_testes"
 NODE_DOCUMENTER_CRITIC = "documentador_critico"
@@ -52,18 +54,33 @@ def _evaluate_reflection_path(state: TestDocState) -> str:
 
 # ── Graph factory ──────────────────────────────────────────────────────────
 
+def _route_entry(state: TestDocState) -> str:
+    """Routes to parser if raw_description is provided, otherwise skips to Agent 1."""
+    if state.raw_description:
+        return NODE_FEATURE_PARSER
+    return NODE_RISK_ANALYST
+
+
 def build_graph() -> StateGraph:
     """Constructs and returns the compiled LangGraph application."""
 
     workflow = StateGraph(TestDocState)
 
     # Register nodes
+    workflow.add_node(NODE_FEATURE_PARSER, agent_0_feature_parser_node)
     workflow.add_node(NODE_RISK_ANALYST, agent_1_risk_analyst_node)
     workflow.add_node(NODE_TEST_STRATEGIST, agent_2_test_strategist_node)
     workflow.add_node(NODE_DOCUMENTER_CRITIC, agent_3_documenter_reflection_node)
 
-    # Entry point
-    workflow.set_entry_point(NODE_RISK_ANALYST)
+    # Entry point — conditional: text input goes through parser, JSON skips it
+    workflow.set_conditional_entry_point(
+        _route_entry,
+        {
+            NODE_FEATURE_PARSER: NODE_FEATURE_PARSER,
+            NODE_RISK_ANALYST: NODE_RISK_ANALYST,
+        },
+    )
+    workflow.add_edge(NODE_FEATURE_PARSER, NODE_RISK_ANALYST)
 
     # Sequential mandatory edges
     workflow.add_edge(NODE_RISK_ANALYST, NODE_TEST_STRATEGIST)

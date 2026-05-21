@@ -1,0 +1,258 @@
+[
+  {
+    "feature_id": "eval_001",
+    "feature_name": "Cadastro de usuário",
+    "identified_risks": [
+      "Aceitar e-mail já cadastrado.",
+      "Aceitar senha abaixo do mínimo de 8 caracteres.",
+      "Permitir acesso antes da confirmação do e-mail.",
+      "Aceitar campos obrigatórios em branco.",
+      "Expor mensagem de erro que revela se o e-mail já existe."
+    ],
+    "criticality": "Média",
+    "recommended_test_types": ["unitário", "integração", "segurança"],
+    "priority": {
+      "Alta": [
+        "Aceitar e-mail já cadastrado.",
+        "Permitir acesso antes da confirmação do e-mail.",
+        "Expor mensagem de erro que revela se o e-mail já existe."
+      ],
+      "Média": [
+        "Aceitar senha abaixo do mínimo de 8 caracteres.",
+        "Aceitar campos obrigatórios em branco."
+      ]
+    },
+    "test_scenarios": [
+      "Rejeitar cadastro com e-mail já existente.",
+      "Rejeitar senha com menos de 8 caracteres.",
+      "Bloquear acesso antes da confirmação do e-mail.",
+      "Rejeitar envio com campos obrigatórios em branco.",
+      "Validar que a mensagem de erro não revela se o e-mail existe."
+    ],
+    "justification": "A funcionalidade envolve criação de identidade digital, validação de dados e fluxo de confirmação de e-mail, exigindo testes unitários para validações, integração com o serviço de e-mail e segurança para evitar enumeração de usuários."
+  },
+  {
+    "feature_id": "eval_002",
+    "feature_name": "Exclusão de conta",
+    "identified_risks": [
+      "Excluir conta sem confirmar senha.",
+      "Deletar dados em vez de anonimizar.",
+      "Permitir exclusão com pedidos pendentes.",
+      "Não encerrar sessões ativas após exclusão.",
+      "Excluir conta de outro usuário por manipulação de ID."
+    ],
+    "criticality": "Crítica",
+    "recommended_test_types": ["unitário", "integração", "segurança"],
+    "priority": {
+      "Alta": [
+        "Deletar dados em vez de anonimizar.",
+        "Excluir conta de outro usuário por manipulação de ID.",
+        "Não encerrar sessões ativas após exclusão."
+      ],
+      "Média": [
+        "Excluir conta sem confirmar senha.",
+        "Permitir exclusão com pedidos pendentes."
+      ]
+    },
+    "test_scenarios": [
+      "Bloquear exclusão sem confirmação de senha.",
+      "Validar que dados são anonimizados e não deletados.",
+      "Impedir exclusão de conta com pedidos pendentes.",
+      "Validar encerramento de todas as sessões ativas após exclusão.",
+      "Testar tentativa de excluir conta de outro usuário via manipulação de ID."
+    ],
+    "justification": "A funcionalidade é irreversível e envolve dados pessoais e sessões ativas, exigindo testes de segurança para controle de autorização, unitários para as regras de negócio e integração com os serviços de anonimização e sessão."
+  },
+  {
+    "feature_id": "eval_003",
+    "feature_name": "Integração com API externa de pagamento",
+    "identified_risks": [
+      "Armazenar dados de cartão localmente.",
+      "Timeout na API externa não gerar estado pendente.",
+      "Pagamento confirmado não atualizar status do pedido.",
+      "Falha duplicar cobrança por retry sem idempotência.",
+      "Webhook de confirmação não ser validado."
+    ],
+    "criticality": "Crítica",
+    "recommended_test_types": ["unitário", "integração", "segurança", "contrato/API"],
+    "priority": {
+      "Alta": [
+        "Armazenar dados de cartão localmente.",
+        "Falha duplicar cobrança por retry sem idempotência.",
+        "Webhook de confirmação não ser validado."
+      ],
+      "Média": [
+        "Timeout na API externa não gerar estado pendente.",
+        "Pagamento confirmado não atualizar status do pedido."
+      ]
+    },
+    "test_scenarios": [
+      "Validar que dados de cartão não são armazenados localmente.",
+      "Simular timeout na API e validar geração de estado pendente.",
+      "Validar atualização de status do pedido após confirmação de pagamento.",
+      "Testar idempotência em retentativas de pagamento.",
+      "Validar autenticidade do webhook antes de processar confirmação."
+    ],
+    "justification": "A funcionalidade envolve dados financeiros sensíveis e integração com serviço externo crítico, exigindo testes de segurança para proteção de dados, contrato/API para o webhook e integração para os fluxos de pagamento e pedido."
+  },
+  {
+    "feature_id": "eval_004",
+    "feature_name": "Emissão de certificado digital",
+    "identified_risks": [
+      "Emitir certificado para usuário que não concluiu o curso.",
+      "Gerar duplicata de certificado.",
+      "Código de validação não ser único.",
+      "Certificado com dados incorretos (nome ou data).",
+      "Código de validação não funcionar na consulta pública."
+    ],
+    "criticality": "Alta",
+    "recommended_test_types": ["unitário", "integração", "E2E"],
+    "priority": {
+      "Alta": [
+        "Emitir certificado para usuário que não concluiu o curso.",
+        "Gerar duplicata de certificado.",
+        "Código de validação não ser único."
+      ],
+      "Média": [
+        "Certificado com dados incorretos (nome ou data).",
+        "Código de validação não funcionar na consulta pública."
+      ]
+    },
+    "test_scenarios": [
+      "Bloquear emissão para usuário com conclusão inferior a 100%.",
+      "Validar que emissão duplicada é impedida.",
+      "Validar unicidade do código de validação gerado.",
+      "Validar que nome, data e código estão corretos no certificado.",
+      "Testar consulta pública do código de validação."
+    ],
+    "justification": "A funcionalidade envolve geração de documento com valor jurídico e código único de validação, exigindo testes unitários para as regras de elegibilidade, integração com o storage e E2E para o fluxo completo de emissão e validação."
+  },
+  {
+    "feature_id": "eval_005",
+    "feature_name": "Agendamento de consulta",
+    "identified_risks": [
+      "Agendar horário já ocupado.",
+      "Permitir dois agendamentos simultâneos para o mesmo paciente.",
+      "Permitir cancelamento fora do prazo de 24 horas.",
+      "Não enviar confirmação por e-mail após agendamento.",
+      "Race condition ao agendar o mesmo horário simultaneamente."
+    ],
+    "criticality": "Alta",
+    "recommended_test_types": ["unitário", "integração", "E2E"],
+    "priority": {
+      "Alta": [
+        "Agendar horário já ocupado.",
+        "Race condition ao agendar o mesmo horário simultaneamente.",
+        "Permitir dois agendamentos simultâneos para o mesmo paciente."
+      ],
+      "Média": [
+        "Permitir cancelamento fora do prazo de 24 horas.",
+        "Não enviar confirmação por e-mail após agendamento."
+      ]
+    },
+    "test_scenarios": [
+      "Rejeitar agendamento em horário já ocupado.",
+      "Bloquear dois agendamentos simultâneos para o mesmo paciente.",
+      "Impedir cancelamento fora do prazo de 24 horas.",
+      "Validar envio de e-mail de confirmação após agendamento.",
+      "Testar race condition para agendamento do mesmo horário por dois pacientes."
+    ],
+    "justification": "A funcionalidade envolve concorrência de recursos (horários), comunicação com o paciente e regras de cancelamento, exigindo testes unitários para as regras de negócio, integração com e-mail e agendamento, e E2E para o fluxo completo."
+  },
+  {
+    "feature_id": "eval_006",
+    "feature_name": "Transferência bancária entre contas",
+    "identified_risks": [
+      "Permitir transferência com saldo insuficiente.",
+      "Transferir para conta inexistente ou inativa.",
+      "Operação não ser atômica (débito sem crédito ou vice-versa).",
+      "Exceder limite diário de transferência.",
+      "Operação não registrada para auditoria."
+    ],
+    "criticality": "Crítica",
+    "recommended_test_types": ["unitário", "integração", "segurança"],
+    "priority": {
+      "Alta": [
+        "Operação não ser atômica (débito sem crédito ou vice-versa).",
+        "Permitir transferência com saldo insuficiente.",
+        "Transferir para conta inexistente ou inativa."
+      ],
+      "Média": [
+        "Exceder limite diário de transferência.",
+        "Operação não registrada para auditoria."
+      ]
+    },
+    "test_scenarios": [
+      "Rejeitar transferência com saldo insuficiente.",
+      "Rejeitar transferência para conta inexistente ou inativa.",
+      "Validar atomicidade: simular falha entre débito e crédito.",
+      "Bloquear transferência que excede o limite diário.",
+      "Validar que toda transferência é registrada no log de auditoria."
+    ],
+    "justification": "A funcionalidade envolve operação financeira atômica e crítica, exigindo testes unitários para validações de saldo e limite, integração para atomicidade entre os serviços e segurança para controle de autorização."
+  },
+  {
+    "feature_id": "eval_007",
+    "feature_name": "Notificação push para usuários",
+    "identified_risks": [
+      "Enviar notificação para usuário que desativou o recurso.",
+      "Enviar notificação fora do horário permitido.",
+      "Falha no envio impactar o fluxo principal da aplicação.",
+      "Histórico de notificações não ser apagado após 30 dias.",
+      "Enviar notificação com conteúdo incorreto ou de outro usuário."
+    ],
+    "criticality": "Média",
+    "recommended_test_types": ["unitário", "integração"],
+    "priority": {
+      "Alta": [
+        "Enviar notificação para usuário que desativou o recurso.",
+        "Enviar notificação com conteúdo incorreto ou de outro usuário."
+      ],
+      "Média": [
+        "Enviar notificação fora do horário permitido.",
+        "Falha no envio impactar o fluxo principal da aplicação.",
+        "Histórico de notificações não ser apagado após 30 dias."
+      ]
+    },
+    "test_scenarios": [
+      "Validar que notificação não é enviada para usuário que desativou o recurso.",
+      "Validar que notificação não é enviada fora do horário permitido.",
+      "Simular falha no gateway e validar que o fluxo principal não é afetado.",
+      "Validar limpeza automática do histórico após 30 dias.",
+      "Validar que notificação contém dados corretos do usuário destinatário."
+    ],
+    "justification": "A funcionalidade é auxiliar e não deve impactar fluxos principais, exigindo testes unitários para as regras de preferência e horário e integração com o gateway de push para validar o envio e o isolamento de falhas."
+  },
+  {
+    "feature_id": "eval_008",
+    "feature_name": "Aprovação de pedido por supervisor",
+    "identified_risks": [
+      "Pedido acima do limite ser processado sem aprovação.",
+      "Supervisor não receber notificação de aprovação pendente.",
+      "Pedido não ser cancelado automaticamente após 48h sem resposta.",
+      "Solicitante não ser notificado sobre aprovação ou rejeição.",
+      "Usuário comum conseguir aprovar pedido sem ser supervisor."
+    ],
+    "criticality": "Alta",
+    "recommended_test_types": ["unitário", "integração", "segurança"],
+    "priority": {
+      "Alta": [
+        "Pedido acima do limite ser processado sem aprovação.",
+        "Usuário comum conseguir aprovar pedido sem ser supervisor."
+      ],
+      "Média": [
+        "Supervisor não receber notificação de aprovação pendente.",
+        "Pedido não ser cancelado automaticamente após 48h sem resposta.",
+        "Solicitante não ser notificado sobre aprovação ou rejeição."
+      ]
+    },
+    "test_scenarios": [
+      "Bloquear processamento de pedido acima de R$ 10.000 sem aprovação.",
+      "Validar envio de notificação ao supervisor para pedidos pendentes.",
+      "Validar cancelamento automático de pedido após 48h sem resposta.",
+      "Validar notificação ao solicitante após aprovação e rejeição.",
+      "Testar tentativa de aprovação por usuário sem perfil de supervisor."
+    ],
+    "justification": "A funcionalidade envolve fluxo de aprovação com controle de acesso por perfil e automação temporal, exigindo testes de segurança para autorização, unitários para regras de prazo e valor, e integração com notificações e serviço de aprovação."
+  }
+]
