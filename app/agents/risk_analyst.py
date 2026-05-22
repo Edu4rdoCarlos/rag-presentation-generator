@@ -15,10 +15,9 @@ Writes to state:
 """
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
-from app.core.config import settings
+from app.core.llm_provider import get_llm
 from app.core.state import TestDocState
 from app.services.vector_store import get_similar_examples
 
@@ -71,11 +70,7 @@ def agent_1_risk_analyst_node(state: TestDocState) -> dict:
         ("human", _HUMAN_PROMPT),
     ])
 
-    llm = ChatOpenAI(
-        model=settings.openai_model,
-        api_key=settings.openai_api_key,
-        temperature=0,
-    )
+    llm = get_llm()
 
     chain = prompt | llm.with_structured_output(_RiskAnalysisOutput)
 
