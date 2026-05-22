@@ -70,15 +70,15 @@ async def analyze_feature(payload: FeatureAnalyzeRequest) -> FeatureAnalyzeRespo
         ) from exc
 
     return FeatureAnalyzeResponse(
-        feature_name=final_state.feature_name,
-        criticality=final_state.criticality,
-        identified_risks=final_state.identified_risks or [],
-        recommended_test_types=final_state.recommended_test_types or [],
-        prioritized_scenarios=final_state.prioritized_scenarios or [],
-        justification=final_state.justification,
-        final_documentation=final_state.final_documentation,
-        reflection_logs=final_state.reflection_logs or [],
-        reflection_iteration=final_state.reflection_iteration,
+        feature_name=final_state["feature_name"],
+        criticality=final_state.get("criticality"),
+        identified_risks=final_state.get("identified_risks", []),
+        recommended_test_types=final_state.get("recommended_test_types", []),
+        prioritized_scenarios=final_state.get("prioritized_scenarios", []),
+        justification=final_state.get("justification"),
+        final_documentation=final_state.get("final_documentation"),
+        reflection_logs=final_state.get("reflection_logs", []),
+        reflection_iteration=final_state.get("reflection_iteration", 0),
     )
 
 
@@ -104,13 +104,13 @@ async def analyze_feature_text(payload: FeatureAnalyzeTextRequest) -> FeatureAna
         ) from exc
 
     return FeatureAnalyzeResponse(
-        feature_name=final_state.feature_name,
-        criticality=final_state.criticality,
-        identified_risks=final_state.identified_risks or [],
-        recommended_test_types=final_state.recommended_test_types or [],
-        prioritized_scenarios=final_state.prioritized_scenarios or [],
-        justification=final_state.justification,
-        final_documentation=final_state.final_documentation,
-        reflection_logs=final_state.reflection_logs or [],
-        reflection_iteration=final_state.reflection_iteration,
+        feature_name=final_state["feature_name"],
+        criticality=final_state.get("criticality"),
+        identified_risks=final_state.get("identified_risks", []),
+        recommended_test_types=final_state.get("recommended_test_types", []),
+        prioritized_scenarios=final_state.get("prioritized_scenarios", []),
+        justification=final_state.get("justification"),
+        final_documentation=final_state.get("final_documentation"),
+        reflection_logs=final_state.get("reflection_logs", []),
+        reflection_iteration=final_state.get("reflection_iteration", 0),
     )

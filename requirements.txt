@@ -5,9 +5,14 @@ uvicorn[standard]>=0.30.0
 # LangChain ecosystem
 langchain>=0.2.0
 langchain-core>=0.2.0
-langchain-openai>=0.1.8
 langchain-community>=0.2.0
 langgraph>=0.1.14
+
+# LLM providers — install only the ones you need
+langchain-google-genai>=2.1.0      # GOOGLE_API_KEY
+langchain-openai>=0.1.0            # OPENAI_API_KEY
+langchain-anthropic>=0.1.0         # ANTHROPIC_API_KEY
+langchain-nvidia-ai-endpoints>=0.1.0  # NVIDIA_API_KEY
 
 # Vector store (RAG - Agent 1)
 faiss-cpu>=1.8.0

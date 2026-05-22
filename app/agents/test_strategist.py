@@ -18,10 +18,9 @@ import logging
 
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
-from app.core.config import settings
+from app.core.llm_provider import get_llm
 from app.core.state import TestDocState
 
 logger = logging.getLogger(__name__)
@@ -183,11 +182,7 @@ def agent_2_test_strategist_node(state: TestDocState) -> dict:
         LLM receives the complete context (risks + test types from Phase 1) and
         generates prioritized_scenarios and justification via with_structured_output().
     """
-    llm = ChatOpenAI(
-        model=settings.openai_model,
-        api_key=settings.openai_api_key,
-        temperature=0,
-    )
+    llm = get_llm()
 
     criticality  = state.criticality or "Média"
     risks_text   = "\n".join(f"- {r}" for r in (state.identified_risks or []))

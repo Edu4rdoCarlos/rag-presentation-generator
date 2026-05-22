@@ -2,7 +2,7 @@
 Vector store singleton built from few-shot training examples.
 
 Loads app/data/train/few_shot_examples.json, converts each example into a
-searchable text document, indexes with FAISS + OpenAI embeddings, and exposes
+searchable text document, indexes with FAISS + Google Generative AI embeddings, and exposes
 get_similar_examples() for use in Agent 1.
 """
 
@@ -11,9 +11,8 @@ from pathlib import Path
 
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings
 
-from app.core.config import settings
+from app.core.llm_provider import get_embeddings
 
 _EXAMPLES_PATH = Path(__file__).parent.parent / "data" / "train" / "few_shot_examples.json"
 
@@ -47,8 +46,7 @@ def _example_to_document(example: dict) -> Document:
 def _build_vector_store() -> FAISS:
     examples = _load_examples()
     documents = [_example_to_document(ex) for ex in examples]
-    embeddings = OpenAIEmbeddings(api_key=settings.openai_api_key)
-    return FAISS.from_documents(documents, embeddings)
+    return FAISS.from_documents(documents, get_embeddings())
 
 
 # Singleton — built once on first import, reused across all requests.

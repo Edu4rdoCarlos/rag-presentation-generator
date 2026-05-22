@@ -11,7 +11,9 @@ O sistema é orquestrado pelo **LangGraph** como um grafo direcionado de três a
 ```
   Entrada (Feature)
         │
-        ▼
+        ├─ texto livre? ──→ Agente 0 (Feature Parser)
+        │                         │
+        ▼                         ▼
 ┌─────────────────────┐
 │   Agente 1          │  Planner + RAG
 │   Analista de       │  Consulta base vetorial, injeta Few-shot,
@@ -38,10 +40,11 @@ O sistema é orquestrado pelo **LangGraph** como um grafo direcionado de três a
   Documento Final
 ```
 
-### Os três agentes
+### Os agentes
 
 | # | Nome | Padrão | Responsabilidade |
 |---|------|--------|-----------------|
+| 0 | Feature Parser | Structured Output | Recebe texto livre e extrai `feature_name`, `description`, `business_rules` e `dependencies` |
 | 1 | Analista de Riscos | Planner + RAG | Recupera exemplos similares via banco vetorial, constrói contexto Few-shot, lista riscos e classifica criticidade (Baixa / Média / Alta / Crítica) |
 | 2 | Estrategista de Testes | Tool Use | Usa `llm.bind_tools()` para acionar a Matriz de Decisão e produzir tipos de teste (Unitário, Integração, E2E, Segurança…) e cenários priorizados |
 | 3 | Documentador e Crítico | Reflection | Formata o documento final e roda auto-revisão; emite `REVER_ESTRATEGIA` para reprocessar ou `APROVADO` para encerrar |
@@ -51,8 +54,9 @@ O sistema é orquestrado pelo **LangGraph** como um grafo direcionado de três a
 O estado é um modelo Pydantic que trafega entre os nós. Cada agente enriquece os campos de sua responsabilidade:
 
 ```
-feature_name, description, business_rules, dependencies   ← entrada
-retrieved_examples, identified_risks, criticality         ← Agente 1
+raw_description                                               ← entrada texto livre
+feature_name, description, business_rules, dependencies      ← Agente 0 / entrada direta
+retrieved_examples, identified_risks, criticality            ← Agente 1
 recommended_test_types, prioritized_scenarios, justification ← Agente 2
 final_documentation, reflection_logs, reflection_iteration   ← Agente 3
 ```
@@ -66,21 +70,22 @@ testdoc_agent/
 ├── app/
 │   ├── main.py                       # Entrypoint FastAPI
 │   ├── core/
-│   │   ├── config.py                 # Configurações via .env
+│   │   ├── config.py                 # Configurações via .env (multi-provider)
+│   │   ├── llm_provider.py           # Factory de LLM e embeddings (auto-detecção de provider)
 │   │   └── state.py                  # TestDocState (Pydantic)
 │   ├── agents/
-│   │   ├── risk_analyst.py           # Agente 1 — stub
-│   │   ├── test_strategist.py        # Agente 2 — stub + ferramentas
-│   │   └── documenter_critic.py      # Agente 3 — stub
+│   │   ├── feature_parser.py         # Agente 0 — parser de texto livre
+│   │   ├── risk_analyst.py           # Agente 1 — RAG + análise de riscos
+│   │   ├── test_strategist.py        # Agente 2 — tool use + matriz de decisão
+│   │   └── documenter_critic.py      # Agente 3 — reflexão e documentação
 │   ├── services/
-│   │   └── graph_service.py          # Grafo LangGraph compilado
+│   │   ├── graph_service.py          # Grafo LangGraph compilado
+│   │   └── vector_store.py           # FAISS + embeddings (RAG)
+│   ├── data/train/
+│   │   └── few_shot_examples.json    # Exemplos anotados para RAG
 │   └── api/v1/routes/
-│       └── feature.py                # POST /api/v1/feature/analyze
-├── deploy/
-│   ├── Dockerfile                    # Multi-stage (builder → runtime)
-│   ├── docker-compose.yml            # Desenvolvimento com live reload
-│   ├── docker-compose.prod.yml       # Overrides de produção
-│   └── .dockerignore
+│       └── feature.py                # POST /api/v1/feature/analyze (e /analyze/text)
+├── run_batch_tests.py                # Bateria de 40 testes automatizados
 ├── .env.example
 └── requirements.txt
 ```
@@ -91,7 +96,73 @@ testdoc_agent/
 
 - Python 3.12+
 - Docker e Docker Compose (para rodar via container)
-- Chave de API OpenAI (ou outro LLM compatível com LangChain)
+- Chave de API de **pelo menos um** dos providers suportados (veja a seção abaixo)
+
+---
+
+## Providers de LLM
+
+O sistema detecta automaticamente qual provider usar com base nas chaves de API presentes no `.env`. Não é necessário alterar nenhum código — basta configurar as variáveis de ambiente.
+
+### Providers suportados
+
+| Provider | Variável de ambiente | Modelo padrão |
+|----------|---------------------|---------------|
+| Google Gemini | `GOOGLE_API_KEY` | `gemini-2.5-flash` |
+| OpenAI | `OPENAI_API_KEY` | `gpt-4o-mini` |
+| Anthropic | `ANTHROPIC_API_KEY` | `claude-sonnet-4-6` |
+| NVIDIA NIM | `NVIDIA_API_KEY` | `meta/llama-3.1-70b-instruct` |
+
+### Como configurar
+
+Copie o arquivo de exemplo e preencha **apenas** a chave do provider desejado:
+
+```bash
+cp .env.example .env
+```
+
+Exemplos de configuração mínima:
+
+```env
+# Google Gemini
+GOOGLE_API_KEY=AIza...
+
+# OpenAI
+OPENAI_API_KEY=sk-...
+
+# Anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+
+# NVIDIA NIM
+NVIDIA_API_KEY=nvapi-...
+```
+
+### Ordem de auto-detecção
+
+Quando `LLM_PROVIDER` não está definido, o sistema usa a **primeira** chave encontrada nesta ordem:
+
+```
+OPENAI_API_KEY → ANTHROPIC_API_KEY → NVIDIA_API_KEY → GOOGLE_API_KEY
+```
+
+### Forçar um provider ou trocar o modelo
+
+```env
+# Forçar provider específico
+LLM_PROVIDER=openai
+
+# Substituir o modelo padrão do provider ativo
+LLM_MODEL=gpt-4o
+```
+
+### Nota sobre Anthropic e embeddings
+
+A API da Anthropic **não oferece endpoint de embeddings**. O vector store (RAG do Agente 1) precisa de um modelo de embeddings. Ao usar `ANTHROPIC_API_KEY`, defina também `GOOGLE_API_KEY` ou `OPENAI_API_KEY` — o sistema usará automaticamente como fallback apenas para os embeddings:
+
+```env
+ANTHROPIC_API_KEY=sk-ant-...   # LLM principal
+GOOGLE_API_KEY=AIza...         # fallback para embeddings
+```
 
 ---
 
@@ -103,7 +174,7 @@ testdoc_agent/
 
 ```bash
 cp .env.example .env
-# Edite o .env e preencha sua OPENAI_API_KEY
+# Edite o .env e preencha a chave do provider desejado
 ```
 
 **2. Suba o container em modo desenvolvimento** (com live reload)
@@ -168,7 +239,7 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Edite o .env e preencha sua OPENAI_API_KEY
+# Edite o .env e preencha a chave do provider desejado
 ```
 
 **4. Inicie o servidor**
@@ -188,7 +259,7 @@ Com o servidor rodando, a documentação interativa está disponível em:
 
 ### `POST /api/v1/feature/analyze`
 
-Recebe a descrição de uma feature e retorna a documentação de testes gerada pelo pipeline multiagente.
+Recebe a feature já estruturada e retorna a documentação gerada pelo pipeline.
 
 **Exemplo de requisição**
 
@@ -208,7 +279,21 @@ curl -X POST http://localhost:8000/api/v1/feature/analyze \
   }'
 ```
 
-**Exemplo de resposta**
+### `POST /api/v1/feature/analyze/text`
+
+Recebe uma **descrição em texto livre** e passa pelo Agente 0 antes de entrar no pipeline principal.
+
+**Exemplo de requisição**
+
+```bash
+curl -X POST http://localhost:8000/api/v1/feature/analyze/text \
+  -H "Content-Type: application/json" \
+  -d '{
+    "raw_text": "Checkout com cupom de desconto. O usuário aplica um código durante a compra. Cupons expirados ou já usados devem ser rejeitados. O valor final não pode ficar negativo. Depende do PaymentService e CouponService."
+  }'
+```
+
+**Exemplo de resposta (ambos os endpoints)**
 
 ```json
 {
@@ -238,26 +323,71 @@ curl -X POST http://localhost:8000/api/v1/feature/analyze \
 
 ---
 
+## Testes
+
+### Bateria de 40 testes (`run_batch_tests.py`)
+
+O arquivo `run_batch_tests.py` executa uma bateria de **40 casos de teste** cobrindo domínios variados (e-commerce, fintech, saúde, educação, redes sociais, logística, imóveis) e gera dois relatórios de saída.
+
+**Pré-requisito:** servidor rodando em `http://localhost:8000`.
+
+**Como executar:**
+
+```bash
+python run_batch_tests.py
+```
+
+**O que acontece:**
+
+1. Cada caso é enviado para `POST /api/v1/feature/analyze/text` com timeout de 90 segundos
+2. As requisições são feitas sequencialmente (1 conexão) com 3 segundos de intervalo para evitar rate limit
+3. Em caso de HTTP 429 (rate limit), aguarda 15 segundos e retenta automaticamente
+
+**Saída gerada:**
+
+| Arquivo | Formato | Conteúdo |
+|---------|---------|----------|
+| `batch_results.json` | JSON | Resultado bruto completo de todos os casos, com tempo de execução por feature |
+| `batch_results.md` | Markdown | Relatório formatado com riscos, cenários, tipos de teste e justificativa de cada feature |
+
+**Exemplo de saída do terminal:**
+
+```
+=====================================================
+  Iniciando bateria com 40 testes no TestDoc Agent
+=====================================================
+[01/40] Analisando feature...
+[01/40] ✅ Sucesso!
+[02/40] Analisando feature...
+[02/40] ✅ Sucesso!
+...
+=====================================================
+✅ Concluído! Resultados salvos em:
+   - batch_results.json (Bruto)
+   - batch_results.md (Formatado para leitura)
+=====================================================
+```
+
+### Teste manual via Swagger
+
+Com o servidor rodando, acesse `http://localhost:8000/docs` para testar interativamente os endpoints pelo Swagger UI sem precisar usar `curl`.
+
+---
+
 ## Variáveis de ambiente
 
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
-| `OPENAI_API_KEY` | — | Chave da API OpenAI (obrigatória) |
-| `OPENAI_MODEL` | `gpt-4o` | Modelo a ser utilizado pelos agentes |
+| `LLM_PROVIDER` | _(auto)_ | Força o provider: `openai`, `anthropic`, `google` ou `nvidia` |
+| `LLM_MODEL` | _(padrão do provider)_ | Substitui o modelo padrão do provider ativo |
+| `GOOGLE_API_KEY` | — | Chave da API Google Gemini |
+| `GOOGLE_MODEL` | `gemini-2.5-flash` | Modelo Gemini padrão |
+| `OPENAI_API_KEY` | — | Chave da API OpenAI |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Modelo OpenAI padrão |
+| `ANTHROPIC_API_KEY` | — | Chave da API Anthropic |
+| `ANTHROPIC_MODEL` | `claude-sonnet-4-6` | Modelo Anthropic padrão |
+| `NVIDIA_API_KEY` | — | Chave da API NVIDIA NIM |
+| `NVIDIA_MODEL` | `meta/llama-3.1-70b-instruct` | Modelo NVIDIA padrão |
 | `APP_ENV` | `development` | Ambiente da aplicação |
 | `APP_DEBUG` | `true` | Ativa modo debug do FastAPI |
 | `MAX_REFLECTION_ITERATIONS` | `3` | Limite de ciclos de auto-revisão do Agente 3 |
-
----
-
-## Implementando os agentes
-
-O projeto foi entregue com os **stubs** dos três agentes prontos para receber a lógica de LLM. Cada arquivo contém comentários `TODO` detalhados indicando exatamente o que implementar:
-
-| Arquivo | O que implementar |
-|---------|-------------------|
-| [app/agents/risk_analyst.py](app/agents/risk_analyst.py) | `VectorStoreRetriever` + `ChatPromptTemplate` com Few-shot |
-| [app/agents/test_strategist.py](app/agents/test_strategist.py) | `llm.bind_tools()` com as funções da Matriz de Decisão |
-| [app/agents/documenter_critic.py](app/agents/documenter_critic.py) | Formatação do relatório + prompt de crítica reflexiva |
-
-A orquestração do grafo em [app/services/graph_service.py](app/services/graph_service.py) **não precisa ser alterada** — ela já conecta os nós, define as arestas sequenciais e o laço de reflexão condicional.
