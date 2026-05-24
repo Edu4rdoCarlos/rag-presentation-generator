@@ -28,7 +28,7 @@ Para instalar e rodar a extensão, consulte o [extension/README.md](extension/RE
 
 ```bash
 cp .env.example .env
-# Edite o .env e preencha a chave do provider desejado
+# Descomente o provider desejado e preencha a chave de API
 ```
 
 **2. Suba o container em modo desenvolvimento** (com live reload)
@@ -93,7 +93,7 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Edite o .env e preencha a chave do provider desejado
+# Descomente o provider desejado e preencha a chave de API
 ```
 
 **4. Inicie o servidor**

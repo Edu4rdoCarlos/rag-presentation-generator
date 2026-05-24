@@ -15,26 +15,20 @@ O sistema detecta automaticamente qual provider usar com base nas chaves de API 
 
 ### Como configurar
 
-Copie o arquivo de exemplo e preencha **apenas** a chave do provider desejado:
+**1. Copie o arquivo de exemplo**
 
 ```bash
 cp .env.example .env
 ```
 
-Exemplos de configuração mínima:
+**2. Descomente o provider desejado e preencha a chave**
+
+O `.env.example` já tem todos os providers listados, comentados por padrão (exceto Google). Basta remover o `#` da linha do provider escolhido e inserir sua chave:
 
 ```env
-# Google Gemini
-GOOGLE_API_KEY=AIza...
-
-# OpenAI
+# Exemplo: habilitar OpenAI
 OPENAI_API_KEY=sk-...
-
-# Anthropic
-ANTHROPIC_API_KEY=sk-ant-...
-
-# NVIDIA NIM
-NVIDIA_API_KEY=nvapi-...
+# OPENAI_MODEL=gpt-4o-mini   ← descomente só se quiser trocar o modelo padrão
 ```
 
 ### Ordem de auto-detecção
