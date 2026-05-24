@@ -1,0 +1,77 @@
+{
+  "name": "testgen-extension",
+  "displayName": "TestGen — Test Documentation Generator",
+  "description": "Generates test documentation for features using the TestDoc Agent API.",
+  "version": "0.2.0",
+  "publisher": "testgen",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "testgen-sidebar",
+          "title": "TestGen",
+          "icon": "$(beaker)"
+        }
+      ]
+    },
+    "views": {
+      "testgen-sidebar": [
+        {
+          "type": "webview",
+          "id": "testgen.chatView",
+          "name": "Test Documentation"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "testgen.analyzeText",
+        "title": "TestGen: Analyze Feature (text)"
+      },
+      {
+        "command": "testgen.analyzeSelection",
+        "title": "TestGen: Analyze Selected Text"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "testgen.analyzeSelection",
+          "when": "editorHasSelection",
+          "group": "testgen"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "TestGen",
+      "properties": {
+        "testgen.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "Base URL of the TestDoc Agent API."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src",
+    "package": "npm run compile && npx @vscode/vsce package --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "axios": "^1.7.0"
+  }
+}
