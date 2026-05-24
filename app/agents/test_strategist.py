@@ -155,11 +155,15 @@ Regras de negócio:
 Tipos de teste recomendados (resultado da Matriz de Decisão):
 {test_types_text}
 
+Feedback da revisão anterior, se houver:
+{reflection_feedback}
+
 Instruções para geração dos cenários:
 - Gere cenários concretos e acionáveis (verbo no infinitivo + contexto específico).
 - Cubra cada risco identificado com pelo menos um cenário.
 - Inclua obrigatoriamente casos negativos e de borda além do caminho feliz.
 - Ordene por criticidade: cenários que validam os maiores riscos primeiro.
+- Quando houver feedback da revisão anterior, corrija explicitamente os problemas apontados.
 - A justificativa deve explicar por que cada TIPO de teste é necessário para ESTA feature \
   específica, não de forma genérica.\
 """
@@ -223,6 +227,11 @@ def agent_2_test_strategist_node(state: TestDocState) -> dict:
 
     # ── Phase 2: Structured output — scenarios + justification ────────────
     test_types_text = "\n".join(f"- {t}" for t in recommended_test_types)
+    reflection_feedback = (
+        state.reflection_logs[-1]
+        if state.reflection_logs and "REVER_ESTRATEGIA" in state.reflection_logs[-1]
+        else "Nenhum feedback anterior."
+    )
 
     chain = llm.with_structured_output(_StrategyOutput)
 
@@ -234,6 +243,7 @@ def agent_2_test_strategist_node(state: TestDocState) -> dict:
             risks_text=risks_text,
             rules_text=rules_text,
             test_types_text=test_types_text,
+            reflection_feedback=reflection_feedback,
         )
     )
 
