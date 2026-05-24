@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
+from app.agents.context_gatherer import get_context_questions
 from app.core.state import TestDocState
 from app.services.graph_service import testdoc_graph
 
@@ -8,6 +9,19 @@ router = APIRouter(prefix="/feature", tags=["feature"])
 
 
 # ── Request / Response schemas ─────────────────────────────────────────────
+
+class ContextQuestionsRequest(BaseModel):
+    raw_text: str = Field(..., examples=["Tela de login com autenticação em dois fatores."])
+
+
+class Question(BaseModel):
+    id: str
+    question: str
+
+
+class ContextQuestionsResponse(BaseModel):
+    questions: list[Question]
+
 
 class FeatureAnalyzeRequest(BaseModel):
     feature_name: str = Field(..., examples=["Checkout com cupom"])
@@ -41,7 +55,28 @@ class FeatureAnalyzeResponse(BaseModel):
     reflection_iteration: int
 
 
-# ── Endpoint ───────────────────────────────────────────────────────────────
+# ── Endpoints ──────────────────────────────────────────────────────────────
+
+@router.post(
+    "/questions",
+    response_model=ContextQuestionsResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Generate clarifying questions for a feature description",
+)
+async def feature_questions(payload: ContextQuestionsRequest) -> ContextQuestionsResponse:
+    """
+    Analyzes a raw feature description and returns 2–4 targeted questions
+    about information gaps that would affect test coverage.
+    """
+    try:
+        questions = await get_context_questions(payload.raw_text)
+        return ContextQuestionsResponse(questions=[Question(**q) for q in questions])
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Question generation failed: {exc}",
+        ) from exc
+
 
 @router.post(
     "/analyze",
