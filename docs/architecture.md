@@ -40,10 +40,30 @@ O sistema é orquestrado pelo **LangGraph** como um grafo direcionado de três a
 
 | # | Nome | Padrão | Responsabilidade |
 |---|------|--------|-----------------|
-| 0 | Feature Parser | Structured Output | Recebe texto livre e extrai `feature_name`, `description`, `business_rules` e `dependencies` |
+| — | Context Gatherer | Human-in-the-Loop | Pré-pipeline. Gera perguntas sobre lacunas da descrição; loop até o LLM declarar contexto suficiente (`ready=true`) |
+| 0 | Feature Parser | Reflection | Extrai `feature_name`, `description`, `business_rules` e `dependencies`; auto-critica a extração procurando regras implícitas e dependências omitidas (até 2 revisões) |
 | 1 | Analista de Riscos | Planner + RAG | Recupera exemplos similares via banco vetorial, constrói contexto Few-shot, lista riscos e classifica criticidade (Baixa / Média / Alta / Crítica) |
 | 2 | Estrategista de Testes | Tool Use | Usa `llm.bind_tools()` para acionar a Matriz de Decisão e produzir tipos de teste (Unitário, Integração, E2E, Segurança…) e cenários priorizados |
-| 3 | Documentador e Crítico | Reflection | Formata o documento final e roda auto-revisão; emite `REVER_ESTRATEGIA` para reprocessar ou `APROVADO` para encerrar |
+| 3 | Documentador e Crítico | Reflection | Formata o documento final e roda auto-revisão; emite `REVER_ESTRATEGIA` para reprocessar ou `APROVADO` para encerrar (até 3 revisões) |
+
+---
+
+### Padrões de agente
+
+**Human-in-the-Loop** — Context Gatherer (`context_gatherer.py`)
+O LLM gera perguntas sobre lacunas da descrição. O desenvolvedor responde no painel da extensão VSCode. As respostas acumulam entre rodadas e são enviadas novamente até o LLM declarar `ready=true`. Quando aprovado, o texto enriquecido (descrição + Q&A) é enviado ao pipeline principal.
+
+**Reflection** — Feature Parser (`feature_parser.py`)
+Funciona como guardrail de qualidade na entrada do pipeline. O LLM extrai os campos estruturados e em seguida se auto-critica: "há regras implícitas não capturadas? alguma dependência foi omitida?". Se reprovar, gera uma versão corrigida e repete (máx. 2 iterações). Garante que o Risk Analyst receba um estado completo.
+
+**Planner + RAG** — Risk Analyst (`risk_analyst.py`)
+Antes de raciocinar, o agente consulta o vector store (FAISS) e recupera os 2 exemplos de features mais similares. Esses exemplos são injetados no prompt como contexto few-shot, calibrando o formato e os critérios de criticidade. O LLM então planeja a análise de riscos sobre o estado enriquecido.
+
+**Tool Use** — Test Strategist (`test_strategist.py`)
+O LLM recebe a lista de riscos e decide quais ferramentas acionar via `llm.bind_tools()`. As ferramentas implementam a Matriz de Decisão em Python puro, determinando tipos de teste (Unitário, Integração, E2E, Segurança…) e priorizando cenários por criticidade.
+
+**Reflection** — Documenter/Critic (`documenter_critic.py`)
+Compila o documento final e executa uma auto-revisão formal. Se emitir `REVER_ESTRATEGIA`, o LangGraph devolve o fluxo ao Test Strategist para uma nova iteração. Encerra com `APROVADO` ou ao atingir o limite de 3 revisões (configurável via `MAX_REFLECTION_ITERATIONS`).
 
 ### Estado compartilhado (`TestDocState`)
 
