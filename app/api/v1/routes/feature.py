@@ -87,26 +87,9 @@ async def feature_questions(payload: ContextQuestionsRequest) -> ContextQuestion
         ) from exc
 
 
-@router.post(
-    "/analyze",
-    response_model=FeatureAnalyzeResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Analyze a feature and generate test documentation",
-)
-async def analyze_feature(payload: FeatureAnalyzeRequest) -> FeatureAnalyzeResponse:
-    """
-    Receives a feature description and runs it through the 3-agent LangGraph
-    workflow to produce structured test documentation.
-    """
-    initial_state = TestDocState(
-        feature_name=payload.feature_name,
-        description=payload.description,
-        business_rules=payload.business_rules,
-        dependencies=payload.dependencies,
-    )
-
+async def _run_graph(initial_state: TestDocState) -> FeatureAnalyzeResponse:
     try:
-        final_state: TestDocState = await testdoc_graph.ainvoke(initial_state)
+        s = await testdoc_graph.ainvoke(initial_state)
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -114,47 +97,38 @@ async def analyze_feature(payload: FeatureAnalyzeRequest) -> FeatureAnalyzeRespo
         ) from exc
 
     return FeatureAnalyzeResponse(
-        feature_name=final_state["feature_name"],
-        criticality=final_state.get("criticality"),
-        identified_risks=final_state.get("identified_risks", []),
-        recommended_test_types=final_state.get("recommended_test_types", []),
-        prioritized_scenarios=final_state.get("prioritized_scenarios", []),
-        justification=final_state.get("justification"),
-        final_documentation=final_state.get("final_documentation"),
-        reflection_logs=final_state.get("reflection_logs", []),
-        reflection_iteration=final_state.get("reflection_iteration", 0),
+        feature_name=s["feature_name"],
+        criticality=s.get("criticality"),
+        identified_risks=s.get("identified_risks", []),
+        recommended_test_types=s.get("recommended_test_types", []),
+        prioritized_scenarios=s.get("prioritized_scenarios", []),
+        justification=s.get("justification"),
+        final_documentation=s.get("final_documentation"),
+        reflection_logs=s.get("reflection_logs", []),
+        reflection_iteration=s.get("reflection_iteration", 0),
     )
+
+
+@router.post(
+    "/analyze",
+    response_model=FeatureAnalyzeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Analyze a structured feature and generate test documentation",
+)
+async def analyze_feature(payload: FeatureAnalyzeRequest) -> FeatureAnalyzeResponse:
+    return await _run_graph(TestDocState(
+        feature_name=payload.feature_name,
+        description=payload.description,
+        business_rules=payload.business_rules,
+        dependencies=payload.dependencies,
+    ))
 
 
 @router.post(
     "/analyze/text",
     response_model=FeatureAnalyzeResponse,
     status_code=status.HTTP_200_OK,
-    summary="Analyze a feature from plain text and generate test documentation",
+    summary="Analyze a plain-text feature description and generate test documentation",
 )
 async def analyze_feature_text(payload: FeatureAnalyzeTextRequest) -> FeatureAnalyzeResponse:
-    """
-    Receives a plain-text description of a feature, parses it into structured
-    fields via Agent 0, then runs the full 3-agent pipeline.
-    """
-    initial_state = TestDocState(raw_description=payload.raw_text)
-
-    try:
-        final_state: TestDocState = await testdoc_graph.ainvoke(initial_state)
-    except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Graph execution failed: {exc}",
-        ) from exc
-
-    return FeatureAnalyzeResponse(
-        feature_name=final_state["feature_name"],
-        criticality=final_state.get("criticality"),
-        identified_risks=final_state.get("identified_risks", []),
-        recommended_test_types=final_state.get("recommended_test_types", []),
-        prioritized_scenarios=final_state.get("prioritized_scenarios", []),
-        justification=final_state.get("justification"),
-        final_documentation=final_state.get("final_documentation"),
-        reflection_logs=final_state.get("reflection_logs", []),
-        reflection_iteration=final_state.get("reflection_iteration", 0),
-    )
+    return await _run_graph(TestDocState(raw_description=payload.raw_text))

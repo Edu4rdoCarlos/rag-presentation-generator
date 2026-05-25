@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
 
 
 class TestDocState(BaseModel):
@@ -9,27 +8,27 @@ class TestDocState(BaseModel):
     """
 
     # ── Raw text input (populated when user sends plain text instead of JSON) ──
-    raw_description: Optional[str] = None
+    raw_description: str | None = None
 
     # ── Input payload (populated at graph entry or by parser agent) ───────────
     feature_name: str = ""
     description: str = ""
-    business_rules: List[str] = Field(default_factory=list)
-    dependencies: List[str] = Field(default_factory=list)
+    business_rules: list[str] = Field(default_factory=list)
+    dependencies: list[str] = Field(default_factory=list)
 
     # ── Agent 1 outputs: Risk Analyst (Planner + RAG) ─────────────────────────
-    retrieved_examples: Optional[List[str]] = Field(default_factory=list)
-    identified_risks: Optional[List[str]] = Field(default_factory=list)
-    criticality: Optional[str] = None  # "Baixa" | "Média" | "Alta" | "Crítica"
+    retrieved_examples: list[str] = Field(default_factory=list)
+    identified_risks: list[str] = Field(default_factory=list)
+    criticality: str | None = None  # "Baixa" | "Média" | "Alta" | "Crítica"
 
     # ── Agent 2 outputs: Test Strategist (Tool Use) ───────────────────────────
-    recommended_test_types: Optional[List[str]] = Field(default_factory=list)
-    prioritized_scenarios: Optional[List[str]] = Field(default_factory=list)
-    justification: Optional[str] = None
+    recommended_test_types: list[str] = Field(default_factory=list)
+    prioritized_scenarios: list[str] = Field(default_factory=list)
+    justification: str | None = None
 
     # ── Agent 3 outputs: Documenter & Critic (Reflection) ────────────────────
-    final_documentation: Optional[str] = None
-    reflection_logs: Optional[List[str]] = Field(default_factory=list)
+    final_documentation: str | None = None
+    reflection_logs: list[str] = Field(default_factory=list)
 
     # ── Internal orchestration metadata ──────────────────────────────────────
     reflection_iteration: int = 0

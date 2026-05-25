@@ -64,16 +64,12 @@ def _format_bullets(items: list[str] | None) -> str:
 
 
 def _format_documentation(state: TestDocState) -> str:
-    """
-    Assembles all state fields into the standardised Markdown/text report
-    defined by the project documentation PDFs.
-    """
-    feature_name = state.feature_name or "Funcionalidade sem nome"
-    description = state.description or "Resumo nao informado."
-    criticality = state.criticality or "Nao classificada"
-    justification = state.justification or "Justificativa nao informada."
+    feature_name  = state.feature_name  or "Funcionalidade sem nome"
+    description   = state.description   or "Resumo não informado."
+    criticality   = state.criticality   or "Não classificada"
+    justification = state.justification or "Justificativa não informada."
 
-    return f"""# Plano de Testes - {feature_name}
+    return f"""# Plano de Testes — {feature_name}
 
 ## Funcionalidade
 {feature_name}
@@ -84,10 +80,10 @@ def _format_documentation(state: TestDocState) -> str:
 ## Criticidade
 {criticality}
 
-## Regras de Negocio
+## Regras de Negócio
 {_format_bullets(state.business_rules)}
 
-## Dependencias
+## Dependências
 {_format_bullets(state.dependencies)}
 
 ## Riscos Identificados
@@ -96,7 +92,7 @@ def _format_documentation(state: TestDocState) -> str:
 ## Tipos de Teste Recomendados
 {_format_bullets(state.recommended_test_types)}
 
-## Cenarios Prioritarios
+## Cenários Prioritários
 {_format_numbered(state.prioritized_scenarios)}
 
 ## Justificativa
@@ -104,63 +100,55 @@ def _format_documentation(state: TestDocState) -> str:
 """
 
 
-_REFLECTION_PROMPT = """\
-Voce e o agente Documentador e Critico do TestDoc Agent.
+_REFLECTION_SYSTEM = """\
+Você é o agente Documentador e Crítico do TestDoc Agent.
 
-Revise criticamente o documento de testes gerado a partir dos dados cumulativos
-dos agentes anteriores. Use o padrao Reflection/Critic descrito na especificacao:
+Revise criticamente o documento de testes gerado. Retorne REVER_ESTRATEGIA apenas \
+para falhas críticas de estratégia:
+- risco central sem cenário correspondente
+- tipo de teste claramente irrelevante para a feature
+- criticidade incompatível com o impacto real (financeiro, segurança, dados sensíveis)
+- ausência de casos negativos ou de borda
 
-- verificar se algum risco obvio foi omitido;
-- verificar se algum tipo de teste recomendado e irrelevante;
-- verificar se a criticidade esta coerente com riscos e impacto;
-- verificar se os cenarios incluem casos positivos, negativos e de borda;
-- verificar se ha justificativa para cada tipo de teste recomendado;
-- verificar se a documentacao esta completa e limpa.
+Para problemas apenas textuais ou de formatação, aprove.\
+"""
 
-Retorne REVER_ESTRATEGIA apenas para falhas criticas de estrategia, por exemplo:
-risco central sem cenario correspondente, tipo de teste claramente irrelevante,
-criticidade incompatível com impacto financeiro/seguranca/dados sensiveis, ou
-ausencia de casos negativos/de borda. Para problemas apenas textuais ou de
-formatacao, aprove.
-
-Dados estruturados:
+_REFLECTION_HUMAN = """\
 Feature: {feature_name}
-Descricao: {description}
-Regras de negocio:
+Descrição: {description}
+Regras de negócio:
 {business_rules}
-Dependencias: {dependencies}
+Dependências: {dependencies}
 Criticidade: {criticality}
 Riscos:
 {risks}
 Tipos de teste:
 {test_types}
-Cenarios:
+Cenários:
 {scenarios}
 Justificativa:
 {justification}
 
 Documento gerado:
-{draft}
+{draft}\
 """
 
 
 def _run_reflection(state: TestDocState, draft: str) -> str:
-    """
-    Invokes a critic LLM prompt against 'draft'.
-    Returns either _REVISION_SIGNAL or _APPROVAL_SIGNAL.
-    """
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", _REFLECTION_PROMPT),
-    ])
-    llm = get_llm()
-    chain = prompt | llm.with_structured_output(_ReflectionOutput)
+    chain = (
+        ChatPromptTemplate.from_messages([
+            ("system", _REFLECTION_SYSTEM),
+            ("human", _REFLECTION_HUMAN),
+        ])
+        | get_llm().with_structured_output(_ReflectionOutput)
+    )
 
     result: _ReflectionOutput = chain.invoke({
         "feature_name": state.feature_name,
         "description": state.description,
         "business_rules": _format_bullets(state.business_rules),
         "dependencies": _format_bullets(state.dependencies),
-        "criticality": state.criticality or "Nao classificada",
+        "criticality": state.criticality or "Não classificada",
         "risks": _format_numbered(state.identified_risks),
         "test_types": _format_bullets(state.recommended_test_types),
         "scenarios": _format_numbered(state.prioritized_scenarios),
@@ -179,15 +167,6 @@ def _run_reflection(state: TestDocState, draft: str) -> str:
 
 
 def agent_3_documenter_reflection_node(state: TestDocState) -> dict:
-    """
-    LangGraph node — receives full state, returns partial update dict.
-
-    1. Call _format_documentation() to produce the draft.
-    2. Call _run_reflection() to evaluate the draft.
-    3. Append the signal to reflection_logs.
-    4. Increment reflection_iteration.
-    5. Return updated fields.
-    """
     draft = _format_documentation(state)
     signal = _run_reflection(state, draft)
 
