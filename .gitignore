@@ -46,3 +46,7 @@ Thumbs.db
 
 # Docker
 *.override.yml
+
+# VSCode Extension
+extension/node_modules/
+extension/out/
