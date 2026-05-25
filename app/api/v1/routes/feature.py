@@ -97,7 +97,7 @@ async def _run_graph(initial_state: TestDocState) -> FeatureAnalyzeResponse:
         ) from exc
 
     return FeatureAnalyzeResponse(
-        feature_name=s["feature_name"],
+        feature_name=s.get("feature_name", ""),
         criticality=s.get("criticality"),
         identified_risks=s.get("identified_risks", []),
         recommended_test_types=s.get("recommended_test_types", []),

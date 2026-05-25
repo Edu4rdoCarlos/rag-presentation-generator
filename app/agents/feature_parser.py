@@ -107,7 +107,6 @@ Extração atual:
 
 def agent_0_feature_parser_node(state: TestDocState) -> dict:
     llm = get_llm()
-
     extract_chain = (
         ChatPromptTemplate.from_messages([("system", _EXTRACT_SYSTEM), ("human", _EXTRACT_HUMAN)])
         | llm.with_structured_output(_ParsedFeature)

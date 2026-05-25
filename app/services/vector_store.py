@@ -50,13 +50,17 @@ def _build_vector_store() -> FAISS:
 
 
 # Singleton — built once on first import, reused across all requests.
+import threading
 _vector_store: FAISS | None = None
+_vector_store_lock = threading.Lock()
 
 
 def get_vector_store() -> FAISS:
     global _vector_store
     if _vector_store is None:
-        _vector_store = _build_vector_store()
+        with _vector_store_lock:
+            if _vector_store is None:
+                _vector_store = _build_vector_store()
     return _vector_store
 
 
