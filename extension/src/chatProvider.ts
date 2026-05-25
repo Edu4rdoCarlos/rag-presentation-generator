@@ -1,9 +1,12 @@
 import * as vscode from "vscode";
-import { analyzeFeatureText, getContextQuestions } from "./api";
+import { analyzeFeatureText, getContextQuestions, PreviousQA } from "./api";
 
 export class TestGenChatProvider implements vscode.WebviewViewProvider {
   public static readonly viewId = "testgen.chatView";
   private _view?: vscode.WebviewView;
+
+  private _rawText = "";
+  private _accumulatedQA: PreviousQA[] = [];
 
   constructor(_extensionUri: vscode.Uri) {}
 
@@ -16,7 +19,7 @@ export class TestGenChatProvider implements vscode.WebviewViewProvider {
       if (message.type === "start") {
         await this._handleStart(message.text);
       } else if (message.type === "submit_answers") {
-        await this._handleSubmitAnswers(message.original, message.answers);
+        await this._handleSubmitAnswers(message.answers);
       }
     });
   }
@@ -29,37 +32,45 @@ export class TestGenChatProvider implements vscode.WebviewViewProvider {
   }
 
   private async _handleStart(rawText: string) {
+    this._rawText = rawText;
+    this._accumulatedQA = [];
+    await this._nextQuestionRound();
+  }
+
+  private async _nextQuestionRound() {
     this._post({ type: "loading_questions" });
     try {
-      const result = await getContextQuestions(rawText);
-      this._post({ type: "questions", questions: result.questions });
+      const result = await getContextQuestions(this._rawText, this._accumulatedQA);
+      if (result.ready) {
+        await this._runAnalysis();
+      } else {
+        this._post({ type: "questions", questions: result.questions });
+      }
     } catch {
       // Questions endpoint unavailable — fall back to direct analysis
-      this._post({ type: "loading" });
-      try {
-        const result = await analyzeFeatureText(rawText);
-        this._post({ type: "result", data: result });
-      } catch (err: any) {
-        this._post({ type: "error", message: err.message });
-      }
+      await this._runAnalysis();
     }
   }
 
   private async _handleSubmitAnswers(
-    original: string,
     answers: Array<{ id: string; question: string; answer: string }>
   ) {
-    this._post({ type: "loading" });
-
-    let enriched = original;
     const answered = answers.filter((a) => a.answer.trim());
-    if (answered.length) {
+    answered.forEach((a) => {
+      this._accumulatedQA.push({ question: a.question, answer: a.answer });
+    });
+    await this._nextQuestionRound();
+  }
+
+  private async _runAnalysis() {
+    this._post({ type: "loading" });
+    let enriched = this._rawText;
+    if (this._accumulatedQA.length) {
       enriched += "\n\n## Contexto adicional fornecido pelo desenvolvedor";
-      answered.forEach((a) => {
-        enriched += `\n\n**${a.question}**\n${a.answer}`;
+      this._accumulatedQA.forEach((qa) => {
+        enriched += `\n\n**${qa.question}**\n${qa.answer}`;
       });
     }
-
     try {
       const result = await analyzeFeatureText(enriched);
       this._post({ type: "result", data: result });
@@ -402,7 +413,7 @@ function doAnalyze(skipAll) {
   }
   questionPanel.style.display = 'none';
   questionPanel.innerHTML = '';
-  vscode.postMessage({ type: 'submit_answers', original: capturedText, answers: answers });
+  vscode.postMessage({ type: 'submit_answers', answers: answers });
 }
 
 // ── Main send ─────────────────────────────────────────────────

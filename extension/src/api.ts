@@ -12,7 +12,13 @@ export interface Question {
   question: string;
 }
 
+export interface PreviousQA {
+  question: string;
+  answer: string;
+}
+
 export interface ContextQuestionsResponse {
+  ready: boolean;
   questions: Question[];
 }
 
@@ -36,11 +42,12 @@ export interface FeatureAnalyzeResponse {
 }
 
 export async function getContextQuestions(
-  rawText: string
+  rawText: string,
+  previousQA: PreviousQA[] = []
 ): Promise<ContextQuestionsResponse> {
   const response = await axios.post<ContextQuestionsResponse>(
     `${getApiBase()}/api/v1/feature/questions`,
-    { raw_text: rawText }
+    { raw_text: rawText, previous_qa: previousQA }
   );
   return response.data;
 }

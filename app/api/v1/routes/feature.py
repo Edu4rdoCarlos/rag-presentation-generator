@@ -10,8 +10,14 @@ router = APIRouter(prefix="/feature", tags=["feature"])
 
 # ── Request / Response schemas ─────────────────────────────────────────────
 
+class PreviousQA(BaseModel):
+    question: str
+    answer: str
+
+
 class ContextQuestionsRequest(BaseModel):
     raw_text: str = Field(..., examples=["Tela de login com autenticação em dois fatores."])
+    previous_qa: list[PreviousQA] = Field(default_factory=list)
 
 
 class Question(BaseModel):
@@ -20,6 +26,7 @@ class Question(BaseModel):
 
 
 class ContextQuestionsResponse(BaseModel):
+    ready: bool
     questions: list[Question]
 
 
@@ -64,13 +71,15 @@ class FeatureAnalyzeResponse(BaseModel):
     summary="Generate clarifying questions for a feature description",
 )
 async def feature_questions(payload: ContextQuestionsRequest) -> ContextQuestionsResponse:
-    """
-    Analyzes a raw feature description and returns 2–4 targeted questions
-    about information gaps that would affect test coverage.
-    """
     try:
-        questions = await get_context_questions(payload.raw_text)
-        return ContextQuestionsResponse(questions=[Question(**q) for q in questions])
+        result = await get_context_questions(
+            payload.raw_text,
+            previous_qa=[qa.model_dump() for qa in payload.previous_qa],
+        )
+        return ContextQuestionsResponse(
+            ready=result["ready"],
+            questions=[Question(**q) for q in result["questions"]],
+        )
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

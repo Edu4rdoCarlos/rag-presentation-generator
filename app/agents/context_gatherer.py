@@ -1,10 +1,9 @@
 """
-Context Gatherer — Pre-analysis Question Generator
+Context Gatherer — Iterative Question Generator (Human-in-the-Loop)
 
-Responsibilities:
-  - Receive a raw feature description.
-  - Use an LLM to identify information gaps that would affect test coverage.
-  - Return 2–4 targeted questions for the developer to answer.
+Each round receives the original description plus all previous Q&A pairs.
+Returns either more questions (ready=False) or signals the context is
+sufficient to proceed to analysis (ready=True).
 
 Not a LangGraph node — invoked directly by the /feature/questions route.
 """
@@ -24,45 +23,74 @@ class _Question(BaseModel):
     )
 
 
-class _ContextQuestions(BaseModel):
+class _GatherResult(BaseModel):
+    ready: bool = Field(
+        description=(
+            "True se o contexto já é suficiente para planejar testes sem suposições críticas. "
+            "False se ainda há lacunas importantes não cobertas pelas respostas anteriores."
+        )
+    )
     questions: list[_Question] = Field(
-        description="Lista de 2 a 4 perguntas. Nunca mais do que 4."
+        default_factory=list,
+        description="Lista de 2 a 4 perguntas quando ready=False. Vazia quando ready=True.",
     )
 
 
 _SYSTEM_PROMPT = """\
 Você é um engenheiro de QA sênior se preparando para analisar uma funcionalidade de software.
 
-Sua tarefa é ler a descrição fornecida e identificar as lacunas de informação mais críticas \
-que afetariam o planejamento de testes — coisas que, se assumidas incorretamente, levariam \
-a uma estratégia de testes errada ou incompleta.
+Avalie se o contexto disponível é suficiente para planejar uma estratégia de testes completa \
+sem fazer suposições críticas.
 
-Gere entre 2 e 4 perguntas específicas que ajudem a entender:
-- Regras de negócio e restrições não mencionadas explicitamente
-- Dependências externas ou integrações que podem falhar
+Se o contexto for suficiente: retorne ready=true e questions=[].
+Se ainda houver lacunas importantes: retorne ready=false e entre 2 e 4 perguntas novas.
+
+Lacunas críticas são aquelas que, se assumidas incorretamente, levariam a uma estratégia errada:
+- Regras de negócio e restrições não mencionadas
 - Comportamentos esperados em cenários de erro
+- Dependências externas que podem falhar
 - Indicadores de criticidade e impacto para o usuário
 
 Regras:
-- Pergunte APENAS o que NÃO está claro na descrição
+- Pergunte APENAS o que ainda NÃO foi respondido nas rodadas anteriores
+- Não repita nem parafraseie perguntas já feitas
+- Se as respostas cobriram os pontos críticos, declare ready=true
 - Seja específico — mencione detalhes da feature nas perguntas
-- Priorize o que mais mudaria a estratégia de testes
-- Evite perguntas genéricas como "há mais requisitos?"
 - Responda no mesmo idioma da descrição recebida
-- Máximo de 4 perguntas
+- Máximo de 4 perguntas por rodada
 """
 
-_HUMAN_PROMPT = "Descrição da funcionalidade:\n\n{raw_description}"
+_HUMAN_PROMPT = """\
+Descrição da funcionalidade:
+
+{raw_description}{context_block}"""
 
 
-async def get_context_questions(raw_description: str) -> list[dict]:
+async def get_context_questions(
+    raw_description: str,
+    previous_qa: list[dict] | None = None,
+) -> dict:
+    previous_qa = previous_qa or []
+
+    context_block = ""
+    answered = [qa for qa in previous_qa if qa.get("answer", "").strip()]
+    if answered:
+        lines = "\n".join(f"P: {qa['question']}\nR: {qa['answer']}" for qa in answered)
+        context_block = f"\n\nRespostas já fornecidas pelo desenvolvedor:\n{lines}"
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", _SYSTEM_PROMPT),
         ("human", _HUMAN_PROMPT),
     ])
 
-    chain = prompt | get_llm().with_structured_output(_ContextQuestions)
+    chain = prompt | get_llm().with_structured_output(_GatherResult)
 
-    result: _ContextQuestions = await chain.ainvoke({"raw_description": raw_description})
+    result: _GatherResult = await chain.ainvoke({
+        "raw_description": raw_description,
+        "context_block": context_block,
+    })
 
-    return [{"id": q.id, "question": q.question} for q in result.questions]
+    return {
+        "ready": result.ready,
+        "questions": [{"id": q.id, "question": q.question} for q in result.questions],
+    }
