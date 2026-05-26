@@ -18,6 +18,8 @@ export interface PreviousQA {
 }
 
 export interface ContextQuestionsResponse {
+  is_feature: boolean;
+  rejection_message: string;
   ready: boolean;
   questions: Question[];
 }

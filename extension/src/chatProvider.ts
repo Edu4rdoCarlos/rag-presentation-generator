@@ -41,7 +41,9 @@ export class TestGenChatProvider implements vscode.WebviewViewProvider {
     this._post({ type: "loading_questions" });
     try {
       const result = await getContextQuestions(this._rawText, this._accumulatedQA);
-      if (result.ready) {
+      if (!result.is_feature) {
+        this._post({ type: "rejection", message: result.rejection_message });
+      } else if (result.ready) {
         await this._runAnalysis();
       } else {
         this._post({ type: "questions", questions: result.questions });
@@ -344,6 +346,16 @@ function addError(msg) {
   inputArea.style.display = 'flex';
 }
 
+function addRejection(msg) {
+  removeById('loading-q-msg');
+  const div = document.createElement('div');
+  div.className = 'msg-assistant';
+  div.innerHTML = '<span style="opacity:0.6">&#9888;</span> ' + msg;
+  messagesEl.appendChild(div);
+  scrollBottom();
+  inputArea.style.display = 'flex';
+}
+
 // ── Question panel ────────────────────────────────────────────
 function showQuestions(questions) {
   removeById('loading-q-msg');
@@ -442,6 +454,7 @@ window.addEventListener('message', function(event) {
   const msg = event.data;
   if      (msg.type === 'loading_questions') addLoading('loading-q-msg', 'Identificando lacunas de contexto...');
   else if (msg.type === 'questions')         showQuestions(msg.questions);
+  else if (msg.type === 'rejection')         addRejection(msg.message);
   else if (msg.type === 'loading')           addLoading('loading-msg', 'Analisando feature...');
   else if (msg.type === 'result')            addResult(msg.data);
   else if (msg.type === 'error')             addError(msg.message);
