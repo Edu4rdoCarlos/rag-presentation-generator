@@ -65,6 +65,14 @@ RUN groupadd --gid 1001 appgroup \
         --no-create-home \
         appuser
 
+# Diretório de cache para o modelo de embeddings (fastembed)
+RUN mkdir -p /app/.cache && chown appuser:appgroup /app/.cache
+
+ENV FASTEMBED_CACHE_PATH=/app/.cache
+
+# Pré-baixa o modelo durante o build para não precisar baixar em runtime
+RUN python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5')"
+
 # Copia o código-fonte com ownership do usuário da aplicação
 COPY --chown=appuser:appgroup . .
 

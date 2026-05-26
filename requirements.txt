@@ -17,6 +17,7 @@ langchain-nvidia-ai-endpoints>=0.1.0  # NVIDIA_API_KEY
 # Vector store (RAG - Agent 1)
 faiss-cpu>=1.8.0
 tiktoken>=0.7.0
+fastembed>=0.3.0
 
 # Data validation & settings
 pydantic>=2.7.0

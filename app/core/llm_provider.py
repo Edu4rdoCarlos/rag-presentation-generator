@@ -38,6 +38,16 @@ def _detect_provider() -> str:
     )
 
 
+def get_tool_choice_required() -> str:
+    """
+    Returns the correct tool_choice value to force tool use for the active provider.
+
+    - Anthropic uses "any"  → translated internally to {"type": "any"}
+    - All others use "required" (OpenAI standard, also accepted by Google and NVIDIA)
+    """
+    return "any" if _detect_provider() == "anthropic" else "required"
+
+
 def get_llm(temperature: float = 0) -> BaseChatModel:
     """Returns the configured chat model based on available API keys."""
     provider = _detect_provider()
@@ -104,7 +114,7 @@ def get_embeddings() -> Embeddings:
         )
 
     if provider == "anthropic":
-        # Anthropic does not offer an embeddings API — use Google or OpenAI as fallback
+        # Anthropic does not offer an embeddings API — prefer other providers, else use local model
         if settings.google_api_key:
             provider = "google"
         elif settings.openai_api_key:
@@ -112,10 +122,9 @@ def get_embeddings() -> Embeddings:
 
             return OpenAIEmbeddings(api_key=settings.openai_api_key)
         else:
-            raise ValueError(
-                "Anthropic does not provide an embeddings API. "
-                "Set GOOGLE_API_KEY or OPENAI_API_KEY to use as fallback for embeddings."
-            )
+            from langchain_community.embeddings import FastEmbedEmbeddings
+
+            return FastEmbedEmbeddings(model_name="BAAI/bge-small-en-v1.5")
 
     # google (default and anthropic fallback)
     from langchain_google_genai import GoogleGenerativeAIEmbeddings
