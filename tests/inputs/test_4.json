@@ -1,0 +1,10 @@
+{
+  "feature_name": "Adição de Item ao Carrinho",
+  "description": "Adicionar um produto ao carrinho de compras.",
+  "business_rules": [
+    "O produto deve ter estoque disponível",
+    "Limite de 99 itens do mesmo produto",
+    "Usuário não logado tem o carrinho salvo nos cookies por 7 dias"
+  ],
+  "dependencies": ["InventoryService", "CartService"]
+}

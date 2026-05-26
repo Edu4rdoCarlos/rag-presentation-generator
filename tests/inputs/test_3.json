@@ -1,0 +1,3 @@
+{
+  "raw_text": "Feature de autenticação em dois fatores via SMS. O usuário recebe um código de 6 dígitos com expiração de 5 minutos. Após 3 tentativas erradas o envio é bloqueado por 15 minutos. Depende do SMSService e do AuthService."
+}

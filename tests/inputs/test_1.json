@@ -1,0 +1,11 @@
+{
+  "feature_name": "Atualização de Perfil",
+  "description": "Permite ao usuário alterar seu nome, telefone e foto de perfil. A foto deve ter até 2MB e estar em formato JPG ou PNG.",
+  "business_rules": [
+    "Nome deve ter no mínimo 3 caracteres",
+    "Telefone deve ser validado via máscara (BR)",
+    "Apenas fotos de até 2MB são permitidas",
+    "Extensões aceitas para imagem: JPG e PNG"
+  ],
+  "dependencies": ["UserService", "StorageService"]
+}

@@ -14,7 +14,7 @@ python run_batch_tests.py
 
 **O que acontece:**
 
-1. Cada caso é enviado para `POST /api/v1/feature/analyze/text` com timeout de 90 segundos
+1. Cada caso é enviado para `POST /api/feature/analyze/text` com timeout de 90 segundos
 2. As requisições são feitas sequencialmente (1 conexão) com 3 segundos de intervalo para evitar rate limit
 3. Em caso de HTTP 429 (rate limit), aguarda 15 segundos e retenta automaticamente
 

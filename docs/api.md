@@ -7,14 +7,14 @@ Com o servidor rodando, a documentação interativa está disponível em:
 
 ---
 
-## `POST /api/v1/feature/analyze`
+## `POST /api/feature/analyze`
 
 Recebe a feature já estruturada e retorna a documentação gerada pelo pipeline.
 
 **Exemplo de requisição**
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/feature/analyze \
+curl -X POST http://localhost:8000/api/feature/analyze \
   -H "Content-Type: application/json" \
   -d '{
     "feature_name": "Checkout com cupom",
@@ -31,14 +31,14 @@ curl -X POST http://localhost:8000/api/v1/feature/analyze \
 
 ---
 
-## `POST /api/v1/feature/analyze/text`
+## `POST /api/feature/analyze/text`
 
 Recebe uma **descrição em texto livre** e passa pelo Agente 0 antes de entrar no pipeline principal.
 
 **Exemplo de requisição**
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/feature/analyze/text \
+curl -X POST http://localhost:8000/api/feature/analyze/text \
   -H "Content-Type: application/json" \
   -d '{
     "raw_text": "Checkout com cupom de desconto. O usuário aplica um código durante a compra. Cupons expirados ou já usados devem ser rejeitados. O valor final não pode ficar negativo. Depende do PaymentService e CouponService."

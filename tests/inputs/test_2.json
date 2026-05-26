@@ -1,0 +1,11 @@
+{
+  "feature_name": "Checkout com Pagamento em Cartão",
+  "description": "Processamento de pagamento utilizando gateway externo. Suporta pagamento à vista e parcelado em até 12x com juros.",
+  "business_rules": [
+    "Validar bandeira do cartão",
+    "Estornar compra se falhar no gateway financeiro",
+    "Registrar log de transação sem salvar número inteiro do cartão",
+    "Parcelamento máximo de 12x"
+  ],
+  "dependencies": ["PaymentGateway", "OrderService", "AuditLogService"]
+}

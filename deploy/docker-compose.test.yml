@@ -1,0 +1,35 @@
+services:
+  # O serviço da API real que vai subir para testarmos contra
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: runtime
+    container_name: testdoc_api_test_env
+    env_file:
+      - ../.env
+    environment:
+      APP_ENV: testing
+    ports:
+      - "8001:8000" # Mapeia para porta diferente para evitar choque com dev local
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+
+  # O container que irá disparar os testes
+  tests:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.test
+    container_name: testdoc_pipeline_runner
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      # O pytest usará essa URL para bater na API interna da rede docker
+      API_URL: http://api:8000
+    command: >
+      pytest -v -s tests/test_pipeline.py

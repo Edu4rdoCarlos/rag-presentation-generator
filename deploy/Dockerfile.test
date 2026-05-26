@@ -1,0 +1,13 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instalar dependências para rodar os testes
+RUN pip install --no-cache-dir pytest httpx
+
+# Copiar os testes para o container
+COPY tests/ tests/
+
+# O CMD padrão será sobrescrito no docker-compose.test.yml, 
+# mas deixamos o pytest caso rode o container isolado
+CMD ["pytest", "-v", "-s", "tests/"]

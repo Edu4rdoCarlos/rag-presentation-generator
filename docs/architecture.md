@@ -99,8 +99,8 @@ testdoc_agent/
 │   │   └── vector_store.py           # FAISS + embeddings (RAG)
 │   ├── data/train/
 │   │   └── few_shot_examples.json    # Exemplos anotados para RAG
-│   └── api/v1/routes/
-│       └── feature.py                # POST /api/v1/feature/analyze (e /analyze/text)
+│   └── api/routes/
+│       └── feature.py                # POST /api/feature/analyze (e /analyze/text)
 ├── run_batch_tests.py                # Bateria de 40 testes automatizados
 ├── .env.example
 └── requirements.txt
