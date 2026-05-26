@@ -20,7 +20,7 @@ from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
-from app.core.llm_provider import get_llm
+from app.core.llm_provider import get_llm, get_tool_choice_required
 from app.core.state import TestDocState
 
 logger = logging.getLogger(__name__)
@@ -194,7 +194,7 @@ def agent_2_test_strategist_node(state: TestDocState) -> dict:
     deps_text    = ", ".join(state.dependencies) if state.dependencies else "Nenhuma"
 
     # ── Phase 1: Tool Use — Decision Matrix ───────────────────────────────
-    llm_with_tools = llm.bind_tools([map_risks_to_test_types], tool_choice="required")
+    llm_with_tools = llm.bind_tools([map_risks_to_test_types], tool_choice=get_tool_choice_required())
 
     ai_message = llm_with_tools.invoke([
         HumanMessage(content=_TOOL_CALL_PROMPT.format(
