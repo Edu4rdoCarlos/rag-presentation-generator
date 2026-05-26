@@ -42,8 +42,8 @@ export class TestGenChatProvider implements vscode.WebviewViewProvider {
     try {
       const result = await getContextQuestions(this._rawText, this._accumulatedQA);
       if (!result.is_feature) {
-        this._post({ type: "rejection", message: result.rejection_message });
-      } else if (result.ready) {
+        this._post({ type: "rejection" });
+      } else if (result.ready || !result.questions?.length) {
         await this._runAnalysis();
       } else {
         this._post({ type: "questions", questions: result.questions });
@@ -346,11 +346,13 @@ function addError(msg) {
   inputArea.style.display = 'flex';
 }
 
-function addRejection(msg) {
+function addRejection() {
   removeById('loading-q-msg');
+  questionPanel.style.display = 'none';
+  questionPanel.innerHTML = '';
   const div = document.createElement('div');
   div.className = 'msg-assistant';
-  div.innerHTML = '<span style="opacity:0.6">&#9888;</span> ' + msg;
+  div.innerHTML = '<span style="opacity:0.6">&#9888;</span> Só consigo responder sobre funcionalidades de software para testes.';
   messagesEl.appendChild(div);
   scrollBottom();
   inputArea.style.display = 'flex';
@@ -454,7 +456,7 @@ window.addEventListener('message', function(event) {
   const msg = event.data;
   if      (msg.type === 'loading_questions') addLoading('loading-q-msg', 'Identificando lacunas de contexto...');
   else if (msg.type === 'questions')         showQuestions(msg.questions);
-  else if (msg.type === 'rejection')         addRejection(msg.message);
+  else if (msg.type === 'rejection')         addRejection();
   else if (msg.type === 'loading')           addLoading('loading-msg', 'Analisando feature...');
   else if (msg.type === 'result')            addResult(msg.data);
   else if (msg.type === 'error')             addError(msg.message);
