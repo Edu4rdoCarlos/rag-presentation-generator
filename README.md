@@ -167,4 +167,7 @@ docker compose -f deploy/docker-compose.test.yml up --build --abort-on-container
 | [docs/api.md](docs/api.md) | Endpoints da API, exemplos de requisição e resposta |
 | [docs/configuration.md](docs/configuration.md) | Providers de LLM e variáveis de ambiente |
 | [docs/tests.md](docs/tests.md) | Bateria de testes automatizados |
+| [docs/exemplo.md](docs/exemplo.md) | Exemplo prático gerado pela aplicação demonstrando o output real |
+| [docs/Especificacao_Tecnica_TestDoc_Agent_LangChain.pdf](docs/Especificacao_Tecnica_TestDoc_Agent_LangChain.pdf) | Especificação técnica oficial do TestDoc Agent abordando detalhes de LangChain |
+| [docs/TestDoc_Agent_Documentacao_Com_FewShot.pdf](docs/TestDoc_Agent_Documentacao_Com_FewShot.pdf) | Documentação de referência das técnicas de prompt com FewShot |
 | [extension/README.md](extension/README.md) | Extensão VSCode |
