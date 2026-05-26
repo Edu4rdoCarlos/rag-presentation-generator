@@ -4,6 +4,17 @@ Agente inteligente multiagente para geração automática de documentação de e
 
 ---
 
+## ⚙️ Arquitetura e Fluxo dos Agentes
+
+O sistema opera com um pipeline de Agentes de Inteligência Artificial trabalhando em colaboração para gerar o documento final:
+
+1. **Agente 0 (Feature Parser - Opcional):** Se o usuário enviar um texto livre bruto, este agente interpreta o texto e o converte para um formato estruturado (regras de negócio, dependências, etc.).
+2. **Agente 1 (Context Gatherer):** Consulta uma base de conhecimento vetorial (RAG) para buscar projetos ou exemplos de testes similares, garantindo que a nova documentação siga os padrões históricos.
+3. **Agente 2 (Risk & Strategy Analyzer):** Pega as informações da feature e o contexto histórico para elencar os maiores riscos de negócio, definir o nível de **criticidade** e propor quais tipos de teste (Funcional, Integração, etc.) são primordiais.
+4. **Agente 3 (Documenter & Critic):** Recebe o esqueleto estratégico e elabora o documento técnico final detalhado. Possui um mecanismo de **reflection**: ele mesmo critica o documento gerado e, se perceber falta de profundidade (como ausência de tratativa de falhas de segurança em uma feature crítica), devolve para o Agente 2 refazer a estratégia, gerando um loop de melhoria.
+
+---
+
 ## Extensão VSCode
 
 A pasta [`extension/`](extension/) contém uma extensão VSCode que conecta o editor ao TestDoc Agent. Com ela é possível descrever uma feature diretamente no painel lateral do VSCode e visualizar o resultado sem sair do editor.
@@ -17,6 +28,30 @@ Para instalar e rodar a extensão, consulte o [extension/README.md](extension/RE
 - Python 3.12+
 - Docker e Docker Compose (para rodar via container)
 - Chave de API de **pelo menos um** dos providers suportados ([ver configuração de providers](docs/configuration.md))
+
+---
+
+### 🔑 Configuração da Chave de API (LLM)
+
+O TestDoc Agent delega as análises complexas para grandes modelos de linguagem (LLMs). Toda a integração de agentes roda em cima dessa inteligência. A arquitetura do projeto foi desenhada de forma agnóstica e **suporta múltiplos provedores** (OpenAI, Google Gemini, Anthropic, etc.), conforme as [regras de configuração da aplicação](docs/configuration.md).
+
+**Como configurar:**
+1. Crie o arquivo `.env` copiando o modelo: `cp .env.example .env`
+2. Obtenha a API Key do provedor de sua preferência.
+3. Cole sua chave no arquivo `.env` ativando a variável correspondente:
+   ```env
+   # Escolha UM dos provedores abaixo:
+   
+   # Opção 1: Google Gemini (Padrão)
+   GOOGLE_API_KEY="AIzaSySuaChaveAqui..."
+   
+   # Opção 2: OpenAI
+   OPENAI_API_KEY="sk-SuaChaveAqui..."
+   
+   # Opção 3: Anthropic
+   ANTHROPIC_API_KEY="sk-ant-SuaChaveAqui..."
+   ```
+4. A aplicação e o Docker lerão automaticamente esse arquivo, injetando a credencial com segurança no serviço LLM sem expor a chave no código-fonte.
 
 ---
 
