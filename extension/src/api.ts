@@ -46,7 +46,7 @@ export async function getContextQuestions(
   previousQA: PreviousQA[] = []
 ): Promise<ContextQuestionsResponse> {
   const response = await axios.post<ContextQuestionsResponse>(
-    `${getApiBase()}/api/v1/feature/questions`,
+    `${getApiBase()}/api/feature/questions`,
     { raw_text: rawText, previous_qa: previousQA }
   );
   return response.data;
@@ -56,7 +56,7 @@ export async function analyzeFeatureText(
   rawText: string
 ): Promise<FeatureAnalyzeResponse> {
   const response = await axios.post<FeatureAnalyzeResponse>(
-    `${getApiBase()}/api/v1/feature/analyze/text`,
+    `${getApiBase()}/api/feature/analyze/text`,
     { raw_text: rawText }
   );
   return response.data;
@@ -66,7 +66,7 @@ export async function analyzeFeatureJson(
   payload: FeatureAnalyzeRequest
 ): Promise<FeatureAnalyzeResponse> {
   const response = await axios.post<FeatureAnalyzeResponse>(
-    `${getApiBase()}/api/v1/feature/analyze`,
+    `${getApiBase()}/api/feature/analyze`,
     payload
   );
   return response.data;

@@ -1,0 +1,12 @@
+{
+  "expected_criticality": "Baixa",
+  "expected_keys": [
+    "feature_name",
+    "criticality",
+    "recommended_test_types",
+    "prioritized_scenarios",
+    "justification",
+    "final_documentation"
+  ],
+  "expected_test_type_substrings": ["Integração"]
+}

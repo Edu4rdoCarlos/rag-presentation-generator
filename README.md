@@ -104,6 +104,26 @@ uvicorn app.main:app --reload
 
 ---
 
+## 🧪 Pipeline de Testes e Padrão Ouro (Gold Standard)
+
+Para garantir a qualidade contínua das predições do agente (LLM), implementamos uma **Pipeline de Testes** automatizada rodando via Docker. A pipeline se baseia no conceito de **Padrão Ouro** (Gold Standard), que compara as respostas dinâmicas do modelo com saídas e formatos ideais de referência.
+
+### Estrutura de Arquivos
+
+- **`tests/inputs/`**: Contém cenários de teste pré-definidos (JSONs estruturados ou texto livre) que simulam requisições reais da API (ex: Atualização de Perfil, Checkout, etc).
+- **`tests/outputs/`**: Contém o respectivo Padrão Ouro de saída. Como o LLM não é determinístico, as asserções validam atributos chave: a precisão do campo **Criticidade** determinada pelo sistema, a **estrutura de chaves obrigatórias** e as sugestões de cenário e testes.
+- **`tests/test_pipeline.py`**: Motor dos testes usando `pytest` para ler as entradas e auditar as saídas da aplicação.
+
+### Como executar a Pipeline
+
+A pipeline roda de forma isolada do ambiente de desenvolvimento. Para rodar a bateria inteira contra a API em background:
+
+```bash
+docker compose -f deploy/docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from tests
+```
+
+---
+
 ## Documentação
 
 | Documento | Conteúdo |

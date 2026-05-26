@@ -3,7 +3,7 @@ import json
 import asyncio
 import time
 
-API_URL = "http://localhost:8000/api/v1/feature/analyze/text"
+API_URL = "http://localhost:8000/api/feature/analyze/text"
 
 # 40 Casos de Teste cobrindo diferentes domínios e complexidades
 TEST_CASES = [
