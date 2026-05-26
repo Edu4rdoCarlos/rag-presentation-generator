@@ -11,6 +11,7 @@ Not a LangGraph node — invoked directly by the /feature/questions route.
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
+from app.core.config import settings
 from app.core.llm_provider import get_llm
 
 
@@ -39,25 +40,19 @@ class _GatherResult(BaseModel):
 _SYSTEM_PROMPT = """\
 Você é um engenheiro de QA sênior se preparando para analisar uma funcionalidade de software.
 
-Avalie se o contexto disponível é suficiente para planejar uma estratégia de testes completa \
-sem fazer suposições críticas.
+Avalie se o contexto disponível é suficiente para planejar uma estratégia de testes sem \
+suposições bloqueantes.
 
 Se o contexto for suficiente: retorne ready=true e questions=[].
-Se ainda houver lacunas importantes: retorne ready=false e entre 2 e 4 perguntas novas.
-
-Lacunas críticas são aquelas que, se assumidas incorretamente, levariam a uma estratégia errada:
-- Regras de negócio e restrições não mencionadas
-- Comportamentos esperados em cenários de erro
-- Dependências externas que podem falhar
-- Indicadores de criticidade e impacto para o usuário
+Se houver lacunas que tornam o planejamento inviável: retorne ready=false e no máximo 2 perguntas.
 
 Regras:
-- Pergunte APENAS o que ainda NÃO foi respondido nas rodadas anteriores
-- Não repita nem parafraseie perguntas já feitas
-- Se as respostas cobriram os pontos críticos, declare ready=true
-- Seja específico — mencione detalhes da feature nas perguntas
-- Responda no mesmo idioma da descrição recebida
-- Máximo de 4 perguntas por rodada
+- Prefira ready=true quando em dúvida — o agente de análise consegue inferir detalhes menores.
+- Só pergunte sobre lacunas BLOQUEANTES: sem a resposta, é impossível escrever qualquer teste.
+- Se já houve pelo menos uma rodada de respostas e os pontos críticos foram abordados: ready=true.
+- Nunca repita perguntas já respondidas.
+- Responda no mesmo idioma da descrição recebida.
+- Máximo de 2 perguntas por rodada.
 """
 
 _HUMAN_PROMPT = """\
@@ -72,8 +67,13 @@ async def get_context_questions(
 ) -> dict:
     previous_qa = previous_qa or []
 
+    MAX_ANSWERS = settings.max_context_answers
+
     context_block = ""
     answered = [qa for qa in previous_qa if qa.get("answer", "").strip()]
+    if len(answered) >= MAX_ANSWERS:
+        return {"ready": True, "questions": []}
+
     if answered:
         lines = "\n".join(f"P: {qa['question']}\nR: {qa['answer']}" for qa in answered)
         context_block = f"\n\nRespostas já fornecidas pelo desenvolvedor:\n{lines}"

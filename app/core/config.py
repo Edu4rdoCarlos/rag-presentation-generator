@@ -33,5 +33,8 @@ class Settings(BaseSettings):
     # Reflection loop guard: max times Agent 3 can send back to Agent 2
     max_reflection_iterations: int = 3
 
+    # Context gatherer: max total answered questions before forcing ready=true
+    max_context_answers: int = 2
+
 
 settings = Settings()
