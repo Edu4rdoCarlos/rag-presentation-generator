@@ -1,6 +1,6 @@
 # TestGen — Extensão VSCode
 
-Extensão VSCode que conecta o editor ao [TestDoc Agent](../README.md). Você descreve uma feature em linguagem natural e a extensão retorna riscos, criticidade, tipos de teste e cenários priorizados diretamente no painel lateral.
+Extensão VSCode que conecta o editor ao TestDoc Agent. Você descreve uma feature em linguagem natural e a extensão retorna riscos, criticidade, tipos de teste e cenários priorizados diretamente no painel lateral.
 
 ---
 
@@ -8,7 +8,7 @@ Extensão VSCode que conecta o editor ao [TestDoc Agent](../README.md). Você de
 
 - [Node.js 18+](https://nodejs.org/) e npm
 - [VSCode 1.90+](https://code.visualstudio.com/)
-- Backend TestDoc Agent rodando em `http://localhost:8000` (veja o [README principal](../README.md))
+- Backend TestDoc Agent rodando em `http://localhost:8000`
 
 ---
 
