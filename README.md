@@ -15,11 +15,67 @@ O sistema opera com um pipeline de Agentes de Inteligência Artificial trabalhan
 
 ---
 
-## Extensão VSCode
+## 🧩 Extensão VSCode
 
 A pasta [`extension/`](extension/) contém uma extensão VSCode que conecta o editor ao TestDoc Agent. Com ela é possível descrever uma feature diretamente no painel lateral do VSCode e visualizar o resultado sem sair do editor.
 
-Para instalar e rodar a extensão, consulte o [extension/README.md](extension/README.md).
+### Pré-requisitos da Extensão
+
+- [Node.js 18+](https://nodejs.org/) e npm
+- [VSCode 1.90+](https://code.visualstudio.com/)
+- Backend TestDoc Agent rodando em `http://localhost:8000` (suba via Docker ou localmente antes)
+
+### Instalação via `.vsix` (Recomendado para uso)
+
+Este é o método mais simples para instalar a extensão de forma permanente no seu VSCode.
+
+**1. Instale as dependências e gere o pacote**
+
+```bash
+cd extension
+npm install
+npm run package
+```
+
+O arquivo `testgen-extension-0.2.0.vsix` será gerado na pasta `extension/`.
+
+**2. Instale no VSCode**
+
+```
+Ctrl+Shift+P → "Extensions: Install from VSIX..." → selecione o arquivo .vsix gerado
+```
+
+**3. Use a extensão**
+
+- Clique no ícone de **béquer (🧪)** na barra lateral para abrir o painel **TestGen**
+- Ou use `Ctrl+Shift+P` → `TestGen: Analyze Feature`
+- Ou selecione um texto no editor, clique com botão direito → `TestGen: Analyze Selected Text`
+
+### Instalação em modo desenvolvimento (F5)
+
+Use este modo se quiser desenvolver ou depurar a extensão.
+
+```bash
+cd extension
+npm install
+code extension/
+```
+
+Na janela do VSCode, pressione **F5**. Uma nova janela **[Extension Development Host]** abrirá com a extensão carregada.
+
+### Configuração
+
+Por padrão a extensão aponta para `http://localhost:8000`. Para alterar:
+
+```
+Ctrl+Shift+P → "Preferences: Open Settings (UI)" → pesquise "TestGen"
+```
+
+| Setting | Padrão | Descrição |
+|---------|--------|-----------| 
+| `testgen.apiUrl` | `http://localhost:8000` | URL base do TestDoc Agent API |
+
+> Para documentação completa da extensão (estrutura de código, scripts disponíveis), consulte o [extension/README.md](extension/README.md).
 
 ---
 

@@ -103,7 +103,8 @@ class _StrategyOutput(BaseModel):
     prioritized_scenarios: list[str] = Field(
         description=(
             "Lista ordenada de 10 a 15 cenários de teste prioritários. Cada item deve ser "
-            "uma descrição concisa no formato: verbo no infinitivo + contexto específico. "
+            "formatado utilizando o padrão BDD (Behavior-Driven Development) com a sintaxe Gherkin "
+            "(Dado / Quando / Então). "
             "Inclua casos positivos (caminho feliz), negativos (entrada inválida / estado "
             "proibido) e de borda. Ordene do mais crítico para o menos crítico. "
             "Inclua APENAS cenários da feature descrita — não misture domínios "
@@ -163,6 +164,12 @@ Feedback da revisão anterior, se houver:
 
 Instruções para geração dos cenários:
 - Gere entre 10 e 15 cenários prioritários — concretos e acionáveis.
+- Formate CADA cenário utilizando o padrão BDD (Behavior-Driven Development) com a sintaxe Gherkin. Estrutura esperada:
+  **Cenário [X]: [Título descritivo]**
+  - **Dado** [Contexto inicial]
+  - **Quando** [Ação executada]
+  - **E** [Ações adicionais, se houver]
+  - **Então** [Resultado esperado]
 - Cubra cada risco identificado com pelo menos um cenário.
 - Inclua casos negativos e de borda além do caminho feliz.
 - Ordene por criticidade: cenários que validam os maiores riscos primeiro.
