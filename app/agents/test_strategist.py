@@ -102,11 +102,14 @@ def map_risks_to_test_types(risks: list[str], criticality: str) -> list[str]:
 class _StrategyOutput(BaseModel):
     prioritized_scenarios: list[str] = Field(
         description=(
-            "Lista ordenada de cenários de teste a implementar. Cada item deve ser uma "
-            "descrição concisa no formato: verbo no infinitivo + contexto específico. "
-            "Inclua obrigatoriamente casos positivos (caminho feliz), negativos "
-            "(entrada inválida / estado proibido) e de borda. "
-            "Ordene do cenário mais crítico para o menos crítico."
+            "Lista ordenada de 10 a 15 cenários de teste prioritários. Cada item deve ser "
+            "uma descrição concisa no formato: verbo no infinitivo + contexto específico. "
+            "Inclua casos positivos (caminho feliz), negativos (entrada inválida / estado "
+            "proibido) e de borda. Ordene do mais crítico para o menos crítico. "
+            "Inclua APENAS cenários da feature descrita — não misture domínios "
+            "(ex: login ≠ cadastro ≠ alteração de senha). Cenários de infraestrutura "
+            "(HTTPS, TLS, firewall) devem ser omitidos ou marcados explicitamente como "
+            "'[infra]' para deixar claro que são responsabilidade de deploy/gateway."
         )
     )
     justification: str = Field(
@@ -159,10 +162,22 @@ Feedback da revisão anterior, se houver:
 {reflection_feedback}
 
 Instruções para geração dos cenários:
-- Gere cenários concretos e acionáveis (verbo no infinitivo + contexto específico).
+- Gere entre 10 e 15 cenários prioritários — concretos e acionáveis.
 - Cubra cada risco identificado com pelo menos um cenário.
-- Inclua obrigatoriamente casos negativos e de borda além do caminho feliz.
+- Inclua casos negativos e de borda além do caminho feliz.
 - Ordene por criticidade: cenários que validam os maiores riscos primeiro.
+- Gere APENAS cenários da feature descrita. Não misture domínios: \
+  se a feature é login, não inclua cenários de cadastro, alteração de senha ou recuperação de senha.
+- Cenários de infraestrutura (HTTPS, TLS, certificados) pertencem ao time de infra/deploy, \
+  não à feature. Se necessário, inclua com prefixo [infra] e descreva como responsabilidade externa.
+- Para senhas: use a terminologia correta — "hash com salt" (bcrypt, Argon2, PBKDF2). \
+  Nunca use "criptografia" para senha, pois implica reversibilidade.
+- Para bloqueio por tentativas: prefira "rate limit por IP/device" em vez de bloqueio simples de conta. \
+  Bloqueio de conta sem rate limit por IP permite ataque de negação de serviço (bloquear contas alheias).
+- Para refresh token: inclua o cenário de rotação — ao usar o refresh token, ele deve ser \
+  invalidado e substituído por um novo. Reutilização de refresh token já consumido deve ser rejeitada.
+- Para logout: distingua "encerrar sessão atual" (logout normal) de \
+  "encerrar todas as sessões" (troca de senha ou logout global explícito).
 - Quando houver feedback da revisão anterior, corrija explicitamente os problemas apontados.
 - A justificativa deve explicar por que cada TIPO de teste é necessário para ESTA feature \
   específica, não de forma genérica.\

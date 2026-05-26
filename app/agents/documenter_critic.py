@@ -109,6 +109,14 @@ para falhas críticas de estratégia:
 - tipo de teste claramente irrelevante para a feature
 - criticidade incompatível com o impacto real (financeiro, segurança, dados sensíveis)
 - ausência de casos negativos ou de borda
+- mais de 15 cenários listados como "prioritários" (excesso dilui o foco)
+- mistura de domínios: cenários de feature diferente da descrita \
+  (ex: cenário de cadastro num plano de login)
+- uso do termo "criptografia" para senha (correto: hash com salt — bcrypt, Argon2, PBKDF2)
+- bloqueio de conta por tentativas sem mencionar risco de DoS ou alternativa de rate limit por IP
+- refresh token sem mencionar rotação (invalidar token usado, emitir novo)
+- logout descrito como "invalidar todas as sessões" sem distinguir logout normal \
+  (sessão atual) de logout global (todas as sessões, geralmente pós troca de senha)
 
 Para problemas apenas textuais ou de formatação, aprove.\
 """
