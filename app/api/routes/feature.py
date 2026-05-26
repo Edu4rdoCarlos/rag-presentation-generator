@@ -31,6 +31,8 @@ class Question(BaseModel):
 
 
 class ContextQuestionsResponse(BaseModel):
+    is_feature: bool = True
+    rejection_message: str = ""
     ready: bool
     questions: list[Question]
 
@@ -82,6 +84,8 @@ async def feature_questions(payload: ContextQuestionsRequest) -> ContextQuestion
             previous_qa=[qa.model_dump() for qa in payload.previous_qa],
         )
         return ContextQuestionsResponse(
+            is_feature=result["is_feature"],
+            rejection_message=result["rejection_message"],
             ready=result["ready"],
             questions=[Question(**q) for q in result["questions"]],
         )

@@ -25,34 +25,54 @@ class _Question(BaseModel):
 
 
 class _GatherResult(BaseModel):
+    is_feature: bool = Field(
+        description=(
+            "True se a descrição parece ser uma funcionalidade de software que pode ser testada. "
+            "False se o conteúdo não tem relação com desenvolvimento de software "
+            "(ex: receitas, piadas, perguntas gerais, textos aleatórios)."
+        )
+    )
+    rejection_message: str = Field(
+        default="",
+        description=(
+            "Mensagem explicando por que o conteúdo não foi reconhecido como uma funcionalidade "
+            "de software. Preenchida apenas quando is_feature=False. "
+            "Responda no mesmo idioma da descrição recebida."
+        ),
+    )
     ready: bool = Field(
         description=(
             "True se o contexto já é suficiente para planejar testes sem suposições críticas. "
-            "False se ainda há lacunas importantes não cobertas pelas respostas anteriores."
+            "False se ainda há lacunas importantes. Irrelevante quando is_feature=False."
         )
     )
     questions: list[_Question] = Field(
         default_factory=list,
-        description="Lista de 2 a 4 perguntas quando ready=False. Vazia quando ready=True.",
+        description="Lista de até 2 perguntas quando ready=False. Vazia quando ready=True ou is_feature=False.",
     )
 
 
 _SYSTEM_PROMPT = """\
 Você é um engenheiro de QA sênior se preparando para analisar uma funcionalidade de software.
 
-Avalie se o contexto disponível é suficiente para planejar uma estratégia de testes sem \
-suposições bloqueantes.
+PRIMEIRO: verifique se a descrição recebida é de fato uma funcionalidade de software que \
+pode ser testada (autenticação, CRUD, fluxo de pagamento, API, relatório, etc.).
 
-Se o contexto for suficiente: retorne ready=true e questions=[].
-Se houver lacunas que tornam o planejamento inviável: retorne ready=false e no máximo 2 perguntas.
+Se NÃO for uma funcionalidade de software (ex: receita, piada, texto aleatório, pergunta \
+genérica): retorne is_feature=false, um rejection_message explicando o motivo, ready=false \
+e questions=[].
 
-Regras:
-- Prefira ready=true quando em dúvida — o agente de análise consegue inferir detalhes menores.
+Se FOR uma funcionalidade de software:
+- Avalie se o contexto é suficiente para planejar testes sem suposições bloqueantes.
+- Se suficiente: retorne is_feature=true, ready=true e questions=[].
+- Se houver lacunas bloqueantes: retorne is_feature=true, ready=false e no máximo 2 perguntas.
+
+Regras adicionais:
+- Prefira ready=true quando em dúvida — o agente de análise infere detalhes menores.
 - Só pergunte sobre lacunas BLOQUEANTES: sem a resposta, é impossível escrever qualquer teste.
-- Se já houve pelo menos uma rodada de respostas e os pontos críticos foram abordados: ready=true.
+- Se já houve pelo menos uma rodada de respostas, declare ready=true.
 - Nunca repita perguntas já respondidas.
 - Responda no mesmo idioma da descrição recebida.
-- Máximo de 2 perguntas por rodada.
 """
 
 _HUMAN_PROMPT = """\
@@ -91,6 +111,8 @@ async def get_context_questions(
     })
 
     return {
+        "is_feature": result.is_feature,
+        "rejection_message": result.rejection_message,
         "ready": result.ready,
         "questions": [{"id": q.id, "question": q.question} for q in result.questions],
     }
