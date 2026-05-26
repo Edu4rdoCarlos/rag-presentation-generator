@@ -1,9 +1,14 @@
+import logging
+import traceback
+
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.agents.context_gatherer import get_context_questions
 from app.core.state import TestDocState
 from app.services.graph_service import testdoc_graph
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/feature", tags=["feature"])
 
@@ -91,6 +96,7 @@ async def _run_graph(initial_state: TestDocState) -> FeatureAnalyzeResponse:
     try:
         s = await testdoc_graph.ainvoke(initial_state)
     except Exception as exc:
+        logger.error("Graph execution failed:\n%s", traceback.format_exc())
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Graph execution failed: {exc}",
