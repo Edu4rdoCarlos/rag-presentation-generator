@@ -1,0 +1,28 @@
+{
+    "feature_name": "Reset de Senha",
+    "description": "Usuário redefine senha através de link enviado por email.",
+    "criticality": "BAIXA",
+    "business_rules": [
+        "O usuário pode solicitar redefinição de senha.",
+        "O sistema envia um link temporário por email."
+    ],
+    "dependencies": [
+        "Banco de dados de usuários",
+        "Serviço de email"
+    ],
+    "identified_risks": [
+        "Token de redefinição reutilizado por atacante.",
+        "Acesso indevido à conta através de token comprometido.",
+        "Token expirado continuar válido."
+    ],
+    "recommended_test_types": [
+        "Functional Test - validar fluxo de redefinição de senha.",
+        "Security Test - validar expiração e reutilização de token."
+    ],
+    "prioritized_scenarios": [
+        "Positive - Usuário redefine senha com token válido.",
+        "Negative - Token expirado deve ser rejeitado.",
+        "Negative - Token reutilizado deve ser invalidado."
+    ],
+    "justification": "Estratégia focada na validação funcional e de segurança do fluxo."
+}

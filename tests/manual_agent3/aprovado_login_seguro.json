@@ -1,0 +1,49 @@
+{
+  "feature_name": "Login Seguro",
+  "description": "Sistema de autenticação com email e senha para usuários da plataforma.",
+  "criticality": "CRÍTICA",
+  "business_rules": [
+    "O usuário deve informar email e senha para autenticação.",
+    "O sistema deve aplicar rate limit por IP e por conta após múltiplas tentativas inválidas.",
+    "A senha deve ser armazenada somente com hash seguro e salt.",
+    "Após login bem-sucedido, o sistema deve gerar uma sessão ou token com tempo de expiração.",
+    "O logout deve invalidar a sessão ou token ativo.",
+    "O sistema não deve revelar se o email existe ou não para evitar enumeração de usuários.",
+    "A autenticação deve ocorrer obrigatoriamente via HTTPS/TLS."
+  ],
+  "dependencies": [
+    "Banco de dados de usuários",
+    "Serviço de autenticação",
+    "Mecanismo de geração e invalidação de sessão/token",
+    "Camada HTTPS/TLS",
+    "Mecanismo de rate limiting"
+  ],
+  "identified_risks": [
+    "Ataque de força bruta com múltiplas tentativas de login.",
+    "Enumeração de usuários por mensagens diferentes para email inexistente e senha inválida.",
+    "Armazenamento inseguro de senha sem hash e salt.",
+    "Roubo ou reutilização indevida de sessão/token.",
+    "Sessão ativa sem expiração ou sem invalidação após logout.",
+    "Envio de credenciais sem HTTPS/TLS.",
+    "Injeção SQL ou NoSQL nos campos de email e senha.",
+    "Bloqueio de conta mal projetado podendo causar DoS contra usuários legítimos."
+  ],
+  "recommended_test_types": [
+    "Functional Test - validar login com credenciais válidas, inválidas e usuário inexistente.",
+    "Security Test - validar brute force, rate limit por IP/conta, enumeração de usuários, hash de senha, sessão/token e proteção contra injeção.",
+    "Edge Case Test - validar expiração de sessão, logout, múltiplas tentativas consecutivas e mensagens genéricas de erro."
+  ],
+  "prioritized_scenarios": [
+    "Positive - Login com email e senha válidos deve autenticar o usuário e gerar sessão/token válido.",
+    "Negative - Login com senha inválida deve ser rejeitado com mensagem genérica.",
+    "Negative - Login com email não registrado deve ser rejeitado com a mesma mensagem genérica usada para senha inválida.",
+    "Negative - Entrada com payload de SQL injection ou NoSQL injection nos campos de email e senha deve ser rejeitada.",
+    "Edge - Múltiplas tentativas inválidas devem acionar rate limit por IP e por conta.",
+    "Edge - Rate limit deve mitigar força bruta sem permitir bloqueio abusivo de contas por terceiros.",
+    "Edge - Sessão/token deve expirar após o tempo configurado.",
+    "Edge - Logout deve invalidar a sessão/token ativo.",
+    "Security - Senhas não devem ser armazenadas em texto plano e devem usar hash seguro com salt.",
+    "Security - Credenciais devem ser transmitidas somente via HTTPS/TLS."
+  ],
+  "justification": "Como login é uma funcionalidade crítica de segurança e controle de acesso, a estratégia prioriza testes funcionais, negativos, de borda e de segurança para cobrir autenticação, proteção contra força bruta, enumeração de usuários, armazenamento seguro de senha, sessão/token, logout, expiração e transmissão segura de credenciais."
+}
