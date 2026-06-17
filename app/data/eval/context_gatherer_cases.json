@@ -1,0 +1,111 @@
+[
+  {
+    "id": "cg_nf_001",
+    "raw_description": "me de uma receita de bolo de chocolate",
+    "previous_qa": [],
+    "expected_is_feature": false,
+    "expected_ready": false,
+    "expected_topics": []
+  },
+  {
+    "id": "cg_nf_002",
+    "raw_description": "boa tarde, como posso te ajudar?",
+    "previous_qa": [],
+    "expected_is_feature": false,
+    "expected_ready": false,
+    "expected_topics": []
+  },
+  {
+    "id": "cg_nf_003",
+    "raw_description": "qual a diferença entre REST e GraphQL?",
+    "previous_qa": [],
+    "expected_is_feature": false,
+    "expected_ready": false,
+    "expected_topics": []
+  },
+  {
+    "id": "cg_f_ready_001",
+    "raw_description": "Tela de login onde o usuário informa e-mail e senha. E-mails inválidos retornam erro 401. Após 5 tentativas falhas a conta é bloqueada por 15 minutos. Token JWT com expiração de 24 horas armazenado em cookie httpOnly. Suporte a logout manual e expiração automática.",
+    "previous_qa": [],
+    "expected_is_feature": true,
+    "expected_ready": true,
+    "expected_topics": []
+  },
+  {
+    "id": "cg_f_ready_002",
+    "raw_description": "sistema de autenticação de usuários",
+    "previous_qa": [
+      {
+        "question": "Qual o método de autenticação previsto?",
+        "answer": "e-mail e senha com token JWT"
+      },
+      {
+        "question": "Como será feito o controle de sessão?",
+        "answer": "token com expiração de 8 horas e renovação automática via refresh token"
+      }
+    ],
+    "expected_is_feature": true,
+    "expected_ready": true,
+    "expected_topics": []
+  },
+  {
+    "id": "cg_f_q_001",
+    "raw_description": "quero implementar um sistema de pagamento",
+    "previous_qa": [],
+    "expected_is_feature": true,
+    "expected_ready": false,
+    "expected_topics": [
+      "pagamento cartão pix boleto débito",
+      "gateway stripe pagseguro integração adquirente",
+      "falha timeout reembolso estorno retry"
+    ]
+  },
+  {
+    "id": "cg_f_q_002",
+    "raw_description": "preciso criar um módulo de cadastro de usuários no sistema",
+    "previous_qa": [],
+    "expected_is_feature": true,
+    "expected_ready": false,
+    "expected_topics": [
+      "campos dados obrigatórios formulário",
+      "e-mail validação confirmação único",
+      "perfil permissão papel acesso"
+    ]
+  },
+  {
+    "id": "cg_f_q_003",
+    "raw_description": "precisamos de um relatório de vendas mensal para os gestores",
+    "previous_qa": [],
+    "expected_is_feature": true,
+    "expected_ready": false,
+    "expected_topics": [
+      "formato exportação pdf excel csv",
+      "filtro período data intervalo",
+      "agendamento automático envio programado"
+    ]
+  },
+  {
+    "id": "cg_f_q_004",
+    "raw_description": "funcionalidade de upload de documentos para o sistema",
+    "previous_qa": [],
+    "expected_is_feature": true,
+    "expected_ready": false,
+    "expected_topics": [
+      "tipo formato arquivo extensão",
+      "tamanho limite máximo restrição",
+      "armazenamento destino s3 bucket nuvem"
+    ]
+  },
+  {
+    "id": "cg_f_q_005",
+    "raw_description": "sistema de notificações para os usuários da plataforma",
+    "previous_qa": [],
+    "expected_is_feature": true,
+    "expected_ready": false,
+    "expected_topics": [
+      "canal e-mail sms push whatsapp",
+      "evento gatilho disparo ação",
+      "preferência configuração opt-out desativar"
+    ]
+  }
+]

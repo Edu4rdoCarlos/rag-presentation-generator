@@ -1,0 +1,82 @@
+[
+  {
+    "feature_id": "eval_001",
+    "feature_name": "Cadastro de usuário",
+    "not_expected_risks": [
+      "Armazenar dados de cartão localmente",
+      "Webhook de confirmação não ser validado",
+      "Race condition ao agendar o mesmo horário simultaneamente",
+      "Emitir certificado para usuário que não concluiu o curso"
+    ]
+  },
+  {
+    "feature_id": "eval_002",
+    "feature_name": "Exclusão de conta",
+    "not_expected_risks": [
+      "Falha duplicar cobrança por retry sem idempotência",
+      "Agendar horário já ocupado",
+      "Gerar duplicata de certificado",
+      "Operação não ser atômica (débito sem crédito ou vice-versa)"
+    ]
+  },
+  {
+    "feature_id": "eval_003",
+    "feature_name": "Integração com API externa de pagamento",
+    "not_expected_risks": [
+      "Aceitar e-mail já cadastrado",
+      "Permitir acesso antes da confirmação do e-mail",
+      "Race condition ao agendar o mesmo horário simultaneamente",
+      "Código de validação não ser único"
+    ]
+  },
+  {
+    "feature_id": "eval_004",
+    "feature_name": "Emissão de certificado digital",
+    "not_expected_risks": [
+      "Armazenar dados de cartão localmente",
+      "Falha duplicar cobrança por retry sem idempotência",
+      "Operação não ser atômica (débito sem crédito ou vice-versa)",
+      "Pedido acima do limite ser processado sem aprovação"
+    ]
+  },
+  {
+    "feature_id": "eval_005",
+    "feature_name": "Agendamento de consulta",
+    "not_expected_risks": [
+      "Armazenar dados de cartão localmente",
+      "Operação não ser atômica (débito sem crédito ou vice-versa)",
+      "Exceder limite diário de transferência",
+      "Gerar duplicata de certificado"
+    ]
+  },
+  {
+    "feature_id": "eval_006",
+    "feature_name": "Transferência bancária entre contas",
+    "not_expected_risks": [
+      "Aceitar e-mail já cadastrado",
+      "Race condition ao agendar o mesmo horário simultaneamente",
+      "Código de validação não ser único",
+      "Enviar notificação fora do horário permitido"
+    ]
+  },
+  {
+    "feature_id": "eval_007",
+    "feature_name": "Notificação push para usuários",
+    "not_expected_risks": [
+      "Armazenar dados de cartão localmente",
+      "Webhook de confirmação não ser validado",
+      "Operação não ser atômica (débito sem crédito ou vice-versa)",
+      "Gerar duplicata de certificado"
+    ]
+  },
+  {
+    "feature_id": "eval_008",
+    "feature_name": "Aprovação de pedido por supervisor",
+    "not_expected_risks": [
+      "Gerar duplicata de certificado",
+      "Race condition ao agendar o mesmo horário simultaneamente",
+      "Armazenar dados de cartão localmente",
+      "Aceitar e-mail já cadastrado"
+    ]
+  }
+]
