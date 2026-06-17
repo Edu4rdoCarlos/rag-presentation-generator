@@ -118,6 +118,9 @@ para falhas críticas de estratégia:
 - logout descrito como "invalidar todas as sessões" sem distinguir logout normal \
   (sessão atual) de logout global (todas as sessões, geralmente pós troca de senha)
 
+Evite falso positivo: nao exija refresh token, logout, sessao ou MFA quando a \
+feature, regras, riscos ou dependencias nao envolverem explicitamente esses fluxos.
+
 Para problemas apenas textuais ou de formatação, aprove.\
 """
 

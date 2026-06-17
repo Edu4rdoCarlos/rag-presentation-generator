@@ -1,0 +1,25 @@
+{
+  "feature_name": "Login sem Rate Limit",
+  "description": "Sistema de login com email e senha, mas sem definição explícita de bloqueio, limitação de tentativas ou proteção contra força bruta.",
+  "criticality": "ALTA",
+  "business_rules": [
+    "O usuário deve conseguir acessar o sistema usando email e senha.",
+    "Credenciais inválidas devem impedir o acesso."
+  ],
+  "dependencies": [
+    "Banco de dados de usuários",
+    "Serviço de autenticação"
+  ],
+  "identified_risks": [
+    "Tentativa de login com senha inválida.",
+    "Usuário não conseguir acessar o sistema com credenciais corretas."
+  ],
+  "recommended_test_types": [
+    "Functional Test - validar login com credenciais válidas e inválidas."
+  ],
+  "prioritized_scenarios": [
+    "Positive - Login com email e senha válidos deve autenticar o usuário.",
+    "Negative - Login com senha inválida deve ser rejeitado."
+  ],
+  "justification": "A estratégia prioriza apenas o comportamento funcional básico do login."
+}
