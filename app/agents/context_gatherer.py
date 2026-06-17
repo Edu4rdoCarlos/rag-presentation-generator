@@ -8,11 +8,15 @@ sufficient to proceed to analysis (ready=True).
 Not a LangGraph node — invoked directly by the /feature/questions route.
 """
 
+import logging
+
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from app.core.config import settings
 from app.core.llm_provider import get_llm
+
+logger = logging.getLogger(__name__)
 
 
 class _Question(BaseModel):
@@ -27,9 +31,11 @@ class _Question(BaseModel):
 class _GatherResult(BaseModel):
     is_feature: bool = Field(
         description=(
-            "True se a descrição parece ser uma funcionalidade de software que pode ser testada. "
-            "False se o conteúdo não tem relação com desenvolvimento de software "
-            "(ex: receitas, piadas, perguntas gerais, textos aleatórios)."
+            "True APENAS se o input descreve uma funcionalidade de software específica e testável "
+            "(ex: autenticação, CRUD, pagamento, API, relatório). "
+            "False para qualquer outra coisa: saudações, pedidos de conselho, perguntas gerais, "
+            "mensagens conversacionais ou qualquer texto que não descreva um comportamento "
+            "concreto de software a ser documentado e testado."
         )
     )
     rejection_message: str = Field(
@@ -94,7 +100,7 @@ async def get_context_questions(
     context_block = ""
     answered = [qa for qa in previous_qa if qa.get("answer", "").strip()]
     if len(answered) >= MAX_ANSWERS:
-        return {"ready": True, "questions": []}
+        return {"is_feature": True, "rejection_message": "", "ready": True, "questions": []}
 
     if answered:
         lines = "\n".join(f"P: {qa['question']}\nR: {qa['answer']}" for qa in answered)
@@ -111,6 +117,15 @@ async def get_context_questions(
         "raw_description": raw_description,
         "context_block": context_block,
     })
+
+    logger.warning(
+        "context_gatherer | input=%r | is_feature=%s | ready=%s | questions=%s | rejection=%r",
+        raw_description,
+        result.is_feature,
+        result.ready,
+        [q.id for q in result.questions],
+        result.rejection_message,
+    )
 
     return {
         "is_feature": result.is_feature,
